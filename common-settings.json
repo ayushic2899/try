@@ -1,0 +1,1641 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "common-settings-template",
+        "version": "1.0.0",
+        "description": "Common Settings Template"
+    },
+    "servers": [
+        {
+            "url": "http://common-settings-app:8089"
+        }
+    ],
+    "paths": {
+        "/status": {
+            "get": {
+                "tags": [
+                    "CommonSettings"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StatusModel"
+                                }
+                            }
+                        },
+                        "description": "Return the status of application"
+                    }
+                },
+                "operationId": "getStatus",
+                "summary": "Api for getting status of the application",
+                "description": "Always returns OK",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/Trail/getOrSetTrailSettings": {
+            "get": {
+                "tags": [
+                    "Trailsettings"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailModel"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getTrailSettings",
+                "summary": "API to get the current settings for Trail settings",
+                "description": "API to get the current settings for Trail settings",
+                 "x-privileges": [
+                    "trail_allow"
+                ]
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TrailModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Trailsettings"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "setTrailSettings",
+                "summary": "API to set the Trail settings",
+                "description": "API to set the Trail settings",
+                "x-privileges": [
+                    "trail_allow"
+                ]
+            }
+        },
+        "/configuration": {
+            "get": {
+                "tags": [
+                    "CommonSettings"
+                ],
+                "parameters": [
+                    {
+                        "name": "pageIndex",
+                        "description": "Index of page to be fetched",
+                        "schema": {
+                            "type": "number"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "description": "Number of records to be fetched per page",
+                        "schema": {
+                            "type": "number"
+                        },
+                        "in": "query",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ConfigurationModel"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Return the list of config properties"
+                    }
+                },
+                "operationId": "getConfigurations",
+                "summary": "Api for fetching all the configuration properties",
+                "description": "Api for fetching all the configuration properties",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConfigurationModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CommonSettings"
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AbstractResponseModel"
+                                }
+                            }
+                        },
+                        "description": "Return the status of saving config property"
+                    }
+                },
+                "operationId": "saveConfiguration",
+                "summary": "Api for saving the config property",
+                "description": "Api for saving the config property",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/configuration/{key}": {
+            "get": {
+                "tags": [
+                    "CommonSettings"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "description": "Config Property Key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConfigurationModel"
+                                }
+                            }
+                        },
+                        "description": "Return the config property"
+                    }
+                },
+                "operationId": "getConfiguration",
+                "summary": "Api for getting a config property based on key",
+                "description": "Api for getting a config property based on key",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "put": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConfigurationModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CommonSettings"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "description": "Config Property Key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AbstractResponseModel"
+                                }
+                            }
+                        },
+                        "description": "Return the status of updating Config Property"
+                    }
+                },
+                "operationId": "updateConfiguration",
+                "summary": "Api for updating an existing config property",
+                "description": "Api for updating an existing config property",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "CommonSettings"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "description": "Config Property Key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AbstractResponseModel"
+                                }
+                            }
+                        },
+                        "description": "Return the status of deletion of config property"
+                    }
+                },
+                "operationId": "deleteConfiguration",
+                "summary": "Api for deleting the config property based on key",
+                "description": "Api for deleting the config property based on key",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "patch": {
+                "requestBody": {
+                    "description": "Value to be updated with",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConfigurationValueModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CommonSettings"
+                ],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "description": "Config Property Key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AbstractResponseModel"
+                                }
+                            }
+                        },
+                        "description": "Returns status of patching config property"
+                    }
+                },
+                "operationId": "patchConfiguration",
+                "summary": "Api for patching an existing config property value",
+                "description": "Api for patching an existing config property value",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/panel/getModuleRootUrl": {
+            "summary": "get Root URL of Module",
+            "description": "get Root URL of Module",
+            "post": {
+                "tags": [
+                    "Panel"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRootUrlResponseModel"
+                                },
+                                "examples": {
+                                    "example": {
+                                        "value": {
+                                            "rootUrl": "some text"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getRootUrlOfModule",
+                "summary": "API to get Root URL of Module",
+                "description": "API to get Root URL of Module",
+                "x-privileges": [
+                    "common_settings"
+                ]
+
+            },
+            "parameters": [
+                {
+                    "name": "clientId",
+                    "description": "name of the client Id ",
+                    "schema": {
+                        "type": "string"
+                    },
+                    "in": "query"
+                }
+            ]
+        },
+        "/panel/getRegisteredModuleDetails/": {
+            "summary": "API to fetch the Service Registration Details",
+            "description": "API to fetch the Service Registration Details ",
+            "post": {
+                "tags": [
+                    "Panel"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RegistrationDetailsResponseModel"
+                                    }
+                                },
+                                "examples": {
+                                    "example": {
+                                        "value": [
+                                            {
+                                                "clientId": "some text",
+                                                "clientName": "some text",
+                                                "LeftMenuIcon": "some text",
+                                                "LeftMenuDescription": "some text",
+                                                "parentClientId": "some text",
+                                                "parentClientName": "some text",
+                                                "isParent": "some text",
+                                                "landingPageClientDisplayName": "some text",
+                                                "landingPageClientDescription": "some text",
+                                                "landingPageIcon": "some text",
+                                                "landingPageParentRootUrl": "some text",
+                                                "LeftPanelsubMenus": [
+                                                    {
+                                                        "subMenuDisplayName": "some text",
+                                                        "subMenuNavigationPath": "some text"
+                                                    },
+                                                    {
+                                                        "subMenuDisplayName": "some text",
+                                                        "subMenuNavigationPath": "some text"
+                                                    }
+                                                ],
+                                                "leftMenuDisplayName": "some text"
+                                            },
+                                            {
+                                                "clientId": "some text",
+                                                "clientName": "some text",
+                                                "LeftMenuIcon": "some text",
+                                                "LeftMenuDescription": "some text",
+                                                "parentClientId": "some text",
+                                                "parentClientName": "some text",
+                                                "isParent": "some text",
+                                                "landingPageClientDisplayName": "some text",
+                                                "landingPageClientDescription": "some text",
+                                                "landingPageIcon": "some text",
+                                                "landingPageParentRootUrl": "some text",
+                                                "LeftPanelsubMenus": [
+                                                    {
+                                                        "subMenuDisplayName": "some text",
+                                                        "subMenuNavigationPath": "some text"
+                                                    },
+                                                    {
+                                                        "subMenuDisplayName": "some text",
+                                                        "subMenuNavigationPath": "some text"
+                                                    }
+                                                ],
+                                                "leftMenuDisplayName": "some text"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getRegisteredModuleDetails",
+                "summary": "API to fetch the Registered Service Details",
+                "description": "API to fetch the Registered service Details",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/mail/sendEmail": {
+            "summary": "API for sending simple text mail",
+            "description": "API for sending simple text mail",
+            "post": {
+                "requestBody": {
+                    "description": "Email request body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailTemplateModel"
+                            },
+                            "examples": {
+                                "example": {
+                                    "value": {
+                                        "cc": "some text",
+                                        "bcc": "some text",
+                                        "subject": "some text",
+                                        "body": "some text",
+                                        "to": "some text"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "mail"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "sendEmail",
+                "summary": "API for sending simple text mail",
+                "description": "API for sending simple text mail",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/mail/getOrSetMailProperties": {
+            "summary": "API to get/set mail properties",
+            "description": "API to get/set mail properties",
+            "get": {
+                "tags": [
+                    "mail"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "description": "",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MailPropertiesModel"
+                                },
+                                "examples": {
+                                    "example": {
+                                        "value": {
+                                            "emailHost": "some text",
+                                            "emailPort": 22,
+                                            "emailFrom": "some text",
+                                            "emailUserName": "some text",
+                                            "emailPassword": "some text",
+                                            "lastEditedOn": "some text",
+                                            "emailSending": true,
+                                            "id": 47
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getMailProperties",
+                "summary": "API to get mail properties",
+                "description": "API to get mail properties",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "post": {
+                "requestBody": {
+                    "description": "Mail Properties Request Body",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MailPropertiesModel"
+                            },
+                            "examples": {
+                                "example": {
+                                    "value": {
+                                        "emailHost": "some text",
+                                        "emailPort": 21,
+                                        "emailFrom": "some text",
+                                        "emailUserName": "some text",
+                                        "emailPassword": "some text",
+                                        "lastEditedOn": "some text",
+                                        "emailSending": true,
+                                        "id": 10
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "mail"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success"
+                    }
+                },
+                "operationId": "setMailProperties",
+                "summary": "API to set mail properties",
+                "description": "API to set mail properties",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/datetime/getOrSetDateTimeFormat": {
+            "get": {
+                "tags": [
+                    "datetime"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DateAndTimeFormatConfigModel"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getDateTimeFormat",
+                "summary": "API to get the current settings for date/time format",
+                "description": "API to get the current settings for date/time format"
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DateAndTimeFormatConfigModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "datetime"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success"
+                    }
+                },
+                "operationId": "setDateTimeFormat",
+                "summary": "API to set the date/time format",
+                "description": "API to set the date/time format",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/mail/sendTestEmail": {
+            "summary": "API for sending simple text test mail",
+            "description": "API for sending simple text test mail",
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailConfigurationsAndTemplate"
+                            },
+                            "examples": {
+                                "ex1": {
+                                    "value": [
+                                        {
+                                            "cc": "some text",
+                                            "bcc": "some text",
+                                            "subject": "some text",
+                                            "body": "some text",
+                                            "to": "some text"
+                                        },
+                                        {
+                                            "emailHost": "some text",
+                                            "emailPort": 22,
+                                            "emailFrom": "some text",
+                                            "emailUserName": "some text",
+                                            "emailPassword": "some text",
+                                            "lastEditedOn": "some text",
+                                            "emailSending": true,
+                                            "id": 47
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "mail"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "sendTestEmail",
+                "summary": "API for sending simple text test mail",
+                "description": "API for sending simple text test mail",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/sms/getOrSetSmsProperties": {
+            "summary": "API to get/set SMS properties",
+            "description": "API to get/set SMS properties",
+            "get": {
+                "tags": [
+                    "sms"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "description": "",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SmsPropertiesModel"
+                                },
+                                "examples": {
+                                    "example": {
+                                        "value": {
+                                            "id": 31,
+                                            "host": "some text",
+                                            "port": 60,
+                                            "systemId": "some text",
+                                            "password": "some text",
+                                            "sourceAddr": "some text"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getSmsProperties",
+                "summary": "Get SMS properties",
+                "description": "Get SMS properties",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SmsPropertiesModel"
+                            },
+                            "examples": {
+                                "example": {
+                                    "value": {
+                                        "id": 97,
+                                        "host": "some text",
+                                        "port": 71,
+                                        "systemId": "some text",
+                                        "password": "some text",
+                                        "sourceAddr": "some text"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "sms"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success"
+                    }
+                },
+                "operationId": "setSmsProperties",
+                "summary": "Set SMS properties",
+                "description": "Set SMS properties",
+                 "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/sms/sendTestSms": {
+            "summary": "API for test SMS",
+            "description": "API for test SMS",
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TestSmsPropertiesModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "sms"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "sendTestSms",
+                "summary": "API for test SMS",
+                "description": "API for test SMS",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/localesettings/getOrSetLocaleSettings": {
+            "get": {
+                "tags": [
+                    "localesettings"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LocaleSettingsModel"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "getLocaleSettings",
+                "summary": "API to get the current settings for locale settings",
+                "description": "API to get the current settings for locale settings",
+                 "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LocaleSettingsModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "localesettings"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "success"
+                    }
+                },
+                "operationId": "setLocaleSettings",
+                "summary": "API to set the Locale settings",
+                "description": "API to set the locale settings",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            }
+        },
+        "/export/getOrSetExportSettings": {
+            "get": {
+                "tags": [
+                    "export"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExportSettingsModel"
+                                }
+                            }
+                        },
+                        "description": "export configuration fetched successfully."
+                    }
+                },
+                "operationId": "getExportSettings",
+                "summary": "get export settings",
+                "x-privileges": [
+                    "common_settings"
+                ]
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExportSettingsModel"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "export"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "export configuration saved successfully."
+                    }
+                },
+                "operationId": "setExportSettings",
+                "summary": "set export settings"
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StatusModel": {
+                "description": "Model for status of the application",
+                "required": [
+                    "status"
+                ],
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "description": "Status of the application",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "status": "OK"
+                }
+            },
+            "TrailModel": {
+                "description": "Decimal precision settings",
+                "required": [
+                    "decimalLimit"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "Id ",
+                        "type": "integer"
+                    },
+                    "decimalLimit": {
+                        "description": "Limit of the decimal that needs to be trimmed",
+                        "type": "integer"
+                    },
+                    "isCommaSeparator": {
+                        "description": "Enable/disable 1000's separator for a number",
+                        "type": "boolean"
+                    },
+                    "isPrecisionSettings": {
+                        "description": "Enable/disable all decimal precision settings",
+                        "type": "boolean"
+                    }
+                }
+            },
+            "AbstractResponseModel": {
+                "description": "Model for status of the operation",
+                "required": [
+                    "status"
+                ],
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "description": "Status of the api call",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "status": "success"
+                }
+            },
+            "ConfigurationModel": {
+                "description": "Model for unit config property",
+                "required": [
+                    "key"
+                ],
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "description": "Key of the config property",
+                        "type": "string"
+                    },
+                    "value": {
+                        "description": "Value of the config property",
+                        "type": "string"
+                    },
+                    "type": {
+                        "description": "Type of the property",
+                        "type": "string"
+                    },
+                    "tags": {
+                        "description": "Tags associated with the config store",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "example": {
+                    "key": "dataingest.datasource.url",
+                    "value": "jdbc:postgresql://localhost:5432/dataingest",
+                    "type": "string",
+                    "tags": [
+                        "dataingest",
+                        "ngp"
+                    ]
+                }
+            },
+            "ConfigurationValueModel": {
+                "description": "Model for value",
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "description": "Value of the config property",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "value": "postgres"
+                }
+            },
+            "RegistrationDetailsResponseModel": {
+                "description": "includes the client details registered in keycloak",
+                "type": "object",
+                "properties": {
+                    "clientId": {
+                        "description": "client ID ",
+                        "type": "string"
+                    },
+                    "clientName": {
+                        "description": "Name of the client",
+                        "type": "string"
+                    },
+                    "LeftMenuIcon": {
+                        "description": "Name of the icon",
+                        "type": "string"
+                    },
+                    "LeftMenuDescription": {
+                        "description": "description of the Client Id ",
+                        "type": "string"
+                    },
+                    "parentClientId": {
+                        "description": "parent client id of the service",
+                        "type": "string"
+                    },
+                    "parentClientName": {
+                        "description": "parent client Name of the service",
+                        "type": "string"
+                    },
+                    "isParent": {
+                        "description": "flag to indicate whether the service is parent or child",
+                        "type": "string"
+                    },
+                    "landingPageClientDisplayName": {
+                        "description": "Client Display Name of the landing page",
+                        "type": "string"
+                    },
+                    "landingPageClientDescription": {
+                        "description": "Client Description for landing Page",
+                        "type": "string"
+                    },
+                    "landingPageIcon": {
+                        "description": "icon for landing page icon",
+                        "type": "string"
+                    },
+                    "landingPageParentRootUrl": {
+                        "description": "Root URL of the parent Service which is not registered to keycloak ",
+                        "type": "string"
+                    },
+                    "LeftPanelsubMenus": {
+                        "description": "Sub menu of the Left Panel , where sub modules are not registered to keycloak",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubMenuAttributeModel"
+                        }
+                    },
+                    "leftMenuDisplayName": {
+                        "description": "Display Name of the service of left Menu",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "clientId": "some text",
+                    "clientName": "some text",
+                    "LeftMenuIcon": "some text",
+                    "LeftMenuDescription": "some text",
+                    "parentClientId": "some text",
+                    "parentClientName": "some text",
+                    "isParent": "some text",
+                    "landingPageClientDisplayName": "some text",
+                    "landingPageClientDescription": "some text",
+                    "landingPageIcon": "some text",
+                    "landingPageParentRootUrl": "some text",
+                    "LeftPanelsubMenus": [
+                        {
+                            "subMenuDisplayName": "some text",
+                            "subMenuNavigationPath": "some text"
+                        },
+                        {
+                            "subMenuDisplayName": "some text",
+                            "subMenuNavigationPath": "some text"
+                        }
+                    ]
+                }
+            },
+            "ServiceRootUrlResponseModel": {
+                "description": "Response Model to fetch The Root Url ",
+                "type": "object",
+                "properties": {
+                    "rootUrl": {
+                        "description": "root Url of the client",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "rootUrl": "some text"
+                }
+            },
+            "SubMenuAttributeModel": {
+                "description": " sub menu Attribute model",
+                "type": "object",
+                "properties": {
+                    "subMenuDisplayName": {
+                        "description": "name of the sub menu",
+                        "type": "string"
+                    },
+                    "subMenuNavigationPath": {
+                        "description": "Navigaion Path or url of the module which is not registered to keycloak",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "subMenuDisplayName": "some text",
+                    "subMenuNavigationPath": "some text"
+                }
+            },
+            "MailPropertiesModel": {
+                "description": "Email Server Configuration Model",
+                "required": [
+                    "emailPort",
+                    "emailHost",
+                    "emailFrom"
+                ],
+                "type": "object",
+                "properties": {
+                    "emailHost": {
+                        "description": "Email Host Name",
+                        "type": "string"
+                    },
+                    "emailPort": {
+                        "description": "Email Port Number",
+                        "type": "integer"
+                    },
+                    "emailFrom": {
+                        "description": "Email from mail",
+                        "type": "string"
+                    },
+                    "emailUserName": {
+                        "description": "Email UserName",
+                        "type": "string"
+                    },
+                    "emailPassword": {
+                        "description": "Mail Password",
+                        "type": "string"
+                    },
+                    "lastEditedOn": {
+                        "description": "Last edited Date timeStamp",
+                        "type": "string"
+                    },
+                    "emailSending": {
+                        "description": "Mail Sending flag",
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "description": "Unique id",
+                        "type": "integer"
+                    }
+                }
+            },
+            "DateAndTimeFormatConfigModel": {
+                "description": "POJO class for date/time format",
+                "required": [
+                    "timeZone",
+                    "startOfWeek",
+                    "dateFormat",
+                    "timeFormat",
+                    "showTimeZone"
+                ],
+                "type": "object",
+                "properties": {
+                    "timeZone": {
+                        "description": "Timezone/Region for time fields",
+                        "type": "string"
+                    },
+                    "startOfWeek": {
+                        "description": "Start day of the week",
+                        "enum": [
+                            "Sunday",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday"
+                        ],
+                        "type": "string"
+                    },
+                    "dateFormat": {
+                        "description": "Format for date fields",
+                        "type": "string"
+                    },
+                    "timeFormat": {
+                        "description": "Format for time fields",
+                        "type": "string"
+                    },
+                    "showTimeZone": {
+                        "description": "Show/Hide time zone in date/time fields",
+                        "type": "boolean"
+                    }
+                }
+            },
+            "EmailConfigurationsAndTemplate": {
+                "description": "",
+                "required": [
+                    "emailTemplate",
+                    "emailConfiguration"
+                ],
+                "type": "object",
+                "properties": {
+                    "emailTemplate": {
+                        "$ref": "#/components/schemas/EmailTemplateModel",
+                        "description": ""
+                    },
+                    "emailConfiguration": {
+                        "$ref": "#/components/schemas/MailPropertiesModel",
+                        "description": ""
+                    }
+                }
+            },
+            "SmsPropertiesModel": {
+                "description": "SMS property model",
+                "required": [
+                    "host",
+                    "port",
+                    "systemId",
+                    "password",
+                    "sourceAddr",
+                    "interfaceVersion"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "Unique id",
+                        "type": "integer"
+                    },
+                    "host": {
+                        "description": "SMSC host",
+                        "type": "string"
+                    },
+                    "port": {
+                        "description": "SMSC port",
+                        "type": "integer"
+                    },
+                    "systemId": {
+                        "description": "SMSC system ID",
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "SMSC password",
+                        "type": "string"
+                    },
+                    "sourceAddr": {
+                        "description": "SMSC source address",
+                        "type": "string"
+                    },
+                    "modifiedAt": {
+                        "description": "modified At",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "description": "created at time",
+                        "type": "string"
+                    },
+                    "interfaceVersion": {
+                        "description": "SMPP interface version",
+                        "enum": [
+                            "IF_33",
+                            "IF_34",
+                            "IF_50"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "id": 88,
+                    "host": "some text",
+                    "port": 39,
+                    "systemId": "some text",
+                    "password": "some text",
+                    "sourceAddr": "some text",
+                    "modifiedAt": "some text",
+                    "createdAt": "some text",
+                    "interfaceVersion": "IF_33"
+                }
+            },
+            "EmailTemplateModel": {
+                "description": "Template for Email",
+                "type": "object",
+                "properties": {
+                    "cc": {
+                        "description": "cc for template",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "bcc": {
+                        "description": "bcc for email template",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "subject": {
+                        "description": "Email subject",
+                        "type": "string"
+                    },
+                    "body": {
+                        "description": "Email Body",
+                        "type": "string"
+                    },
+                    "to": {
+                        "description": "To Email Address",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "groupTo": {
+                        "description": "Group id for to list",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "groupBcc": {
+                        "description": "group id for BCC list",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "groupCc": {
+                        "description": "group id for CC list",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "toEmailId": {
+                        "description": "To address Email ID",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "ccEmailId": {
+                        "description": "CC address email ID",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "bccEmailId": {
+                        "description": "Bcc address Email ID",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "attachments": {
+                        "description": "list of email attachments",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EmailAttachmentModel"
+                        }
+                    }
+                },
+                "example": {
+                    "cc": [
+                        "some text",
+                        "some text"
+                    ],
+                    "bcc": [
+                        "some text",
+                        "some text"
+                    ],
+                    "subject": "some text",
+                    "body": "some text",
+                    "to": [
+                        "some text",
+                        "some text"
+                    ],
+                    "groupTo": [
+                        "some text",
+                        "some text"
+                    ],
+                    "groupBcc": [
+                        "some text",
+                        "some text"
+                    ],
+                    "groupCc": [
+                        "some text",
+                        "some text"
+                    ]
+                }
+            },
+            "EmailAttachmentModel": {
+                "description": "Template for Email Attachments",
+                "type": "object",
+                "properties": {
+                    "fileName": {
+                        "description": "file name with extension",
+                        "type": "string"
+                    },
+                    "fileEnvironment": {
+                        "description": "Environment in which file is present",
+                        "enum": [
+                            "minio",
+                            "kubernetes"
+                        ],
+                        "type": "string"
+                    },
+                    "filePath": {
+                        "description": "path to the file",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "fileName": "filename to be sent",
+                    "filePath": "absolute path for the file",
+                    "fileEnvironment": "minio"
+                }
+            },
+            "TestSmsPropertiesModel": {
+                "description": "Test SMS Model",
+                "required": [
+                    "host",
+                    "port",
+                    "systemId",
+                    "password",
+                    "sourceAddr",
+                    "interfaceVersion",
+                    "userId"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "Unique id",
+                        "type": "integer"
+                    },
+                    "host": {
+                        "description": "SMSC host",
+                        "type": "string"
+                    },
+                    "port": {
+                        "description": "SMSC port",
+                        "type": "integer"
+                    },
+                    "systemId": {
+                        "description": "SMSC system ID",
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "SMSC password",
+                        "type": "string"
+                    },
+                    "sourceAddr": {
+                        "description": "SMSC source address",
+                        "type": "string"
+                    },
+                    "interfaceVersion": {
+                        "description": "SMPP interface version",
+                        "enum": [
+                            "IF_33",
+                            "IF_34",
+                            "IF_50"
+                        ],
+                        "type": "string"
+                    },
+                    "userId": {
+                        "description": "userName of current logged in user",
+                        "type": "string"
+                    }
+                }
+            },
+            "LocaleSettingsModel": {
+                "description": "Decimal precision settings",
+                "required": [
+                    "decimalLimit"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "Id ",
+                        "type": "integer"
+                    },
+                    "decimalLimit": {
+                        "description": "Limit of the decimal that needs to be trimmed",
+                        "type": "integer"
+                    },
+                    "isCommaSeparator": {
+                        "description": "Enable/disable 1000's separator for a number",
+                        "type": "boolean"
+                    },
+                    "isPrecisionSettings": {
+                        "description": "Enable/disable all decimal precision settings",
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ExportSettingsModel": {
+                "description": "",
+                "type": "object",
+                "properties": {
+                    "record_count": {
+                        "format": "int64",
+                        "description": "",
+                        "type": "integer"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "CommonSettings",
+            "description": "Tag for Common Settings"
+        },
+        {
+            "name": "mail",
+            "description": "Mail Tag"
+        },
+        {
+            "name": "sms",
+            "description": "SMS tag"
+        },
+        {
+            "name": "localesettings",
+            "description": "Tag for locale settings"
+        },
+        {
+            "name": "export",
+            "description": "export apis"
+        }
+    ],
+    "x-modules": [
+        {
+            "id": "common_settings",
+            "name": "Application Access",
+            "description": "Common Settings Application Access"
+        },
+        {
+            "id": "trail_allow",
+            "name": "Trail Access",
+            "description": "Trail setting Access"
+        }
+        
+
+        
+    ],
+     
+    "x-default-parent-details": {
+        "parentName": "sysadmin",
+        "parentDescription": "Sysadmin"
+    },
+    "x-default-groups": [
+        {
+            "name": "NGP-Administrator",
+            "description": "Group for the Admin privileges."
+        },
+        {
+            "name": "NGP-User",
+            "description": "Guest Group for the service. View roles only.",
+            "roles": [
+                "common_settings"
+            ]
+        }
+    ],
+    "x-default-users": [
+        {
+            "id": "ngp-admin",
+            "name": "NGP Administrator",
+            "password": "Pa55w0rd"
+        },
+        {
+            "id": "ngp-user",
+            "name": "NGP User",
+            "password": "Pa55w0rd",
+            "description": "User for the service. Some roles only.",
+            "groups": [
+                "NGP-User"
+            ]
+        }
+    ]
+}
