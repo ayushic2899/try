@@ -47,46 +47,6 @@
                 }
             ]
         },
-        "/admin": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AdminModel"
-                                    }
-                                }
-                            }
-                        },
-                        "description": "Returns Admin results of users and groups"
-                    }
-                },
-                "operationId": "admin",
-                "summary": "Gets the admin results of users and groups that contain the given string",
-                "description": "Gets the admin results of users and groups that contain the given string",
-                "x-privileges": [
-                    "admin_allow"
-                ]
-            },
-            "parameters": [
-                {
-                    "name": "q",
-                    "description": "query",
-                    "schema": {
-                        "type": "string"
-                    },
-                    "in": "query",
-                    "required": true
-                }
-            ]
-        },
-        
         "/user/summary": {
             "get": {
                 "tags": [
@@ -338,7 +298,6 @@
                 "description": "API for saving the user"
             }
         },
-         
         "/country": {
             "get": {
                 "tags": [
@@ -362,34 +321,6 @@
                 "operationId": "getCountries",
                 "summary": "API for getting all the countries",
                 "description": "API for getting all the countries"
-            }
-        },
-          "/demo": {
-            "get": {
-                "tags": [
-                    "UserManagement"
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/DemoModel"
-                                    }
-                                }
-                            }
-                        },
-                        "description": "Response when all countries are fetched successfully"
-                    }
-                },
-                "operationId": "getDemo",
-                "summary": "API for getting all the demo",
-                "description": "API for getting all the demo",
-                "x-privileges": [
-                    "demo_allow"
-                ]
             }
         },
         "/language": {
@@ -1195,7 +1126,6 @@
                 "description": "gets list of all applications"
             }
         },
-          
         "/group/{id}/applications": {
             "get": {
                 "tags": [
@@ -3038,51 +2968,6 @@
                     }
                 }
             },
-            "AdminModel": {
-                "description": "Search results grouped by type",
-                "required": [
-                ],
-                "type": "object",
-                "properties": {
-                    "group": {
-                        "description": "Group for which the results belong to.",
-                        "type": "string"
-                    },
-                    "results": {
-                        "description": "Entities belonging to the group",
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminItemModel"
-                        }
-                    }
-                }
-            },
-            "AdminItemModel": {
-                "description": "Search result for a entity type",
-                "required": [
-                    "name",
-                    "value"
-                ],
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "description": "The name displayed to the user",
-                        "type": "string"
-                    },
-                    "value": {
-                        "description": "The value used to perform an operation when the user selects this entity",
-                        "type": "string"
-                    },
-                    "description": {
-                        "description": "Short description appended to the name when displaying the results.",
-                        "type": "string"
-                    },
-                    "isLdapUser": {
-                        "description": "whether ldap user or not",
-                        "type": "boolean"
-                    }
-                }
-            },
             "SearchResultItemModel": {
                 "description": "Search result for a entity type",
                 "required": [
@@ -3421,26 +3306,6 @@
                     },
                     "name": {
                         "description": "Name of the country",
-                        "type": "string"
-                    }
-                },
-                "example": {
-                    "code": "IN",
-                    "name": "India"
-                }
-            },
-             "DemoModel": {
-                "description": "Model for Demo Data",
-                "required": [
-                ],
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "description": "Unique code of the Demo",
-                        "type": "string"
-                    },
-                    "name": {
-                        "description": "Name of the Demo",
                         "type": "string"
                     }
                 },
@@ -3800,7 +3665,6 @@
                     }
                 }
             },
-            
             "ModuleModel": {
                 "description": "A privilege provided by an application",
                 "required": [
@@ -4737,7 +4601,7 @@
                     },
                     "count": {
                         "format": "int64",
-                        "descriptFion": "total records present in the system",
+                        "description": "total records present in the system",
                         "type": "integer"
                     }
                 }
@@ -4775,19 +4639,7 @@
             "id": "user_management",
             "name": "Application Access",
             "description": "User Management Application Access"
-        },
-        {
-            "id": "demo_allow",
-            "name": "Demo Access",
-            "description": "Demo setting Access"
-        },
-        {
-            "id": "admin_allow",
-            "name": "Admin Access",
-            "description": "Admin setting Access"
         }
-
-         
     ],
     "x-default-groups": [
         {
