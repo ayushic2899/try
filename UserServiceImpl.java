@@ -74,16 +74,16 @@ import com.subex.ngp.usermanagement.model.IdModel;
 import com.subex.ngp.usermanagement.model.SearchResultItemModel;
 import com.subex.ngp.usermanagement.model.UrlModel;
 import com.subex.ngp.usermanagement.model.UserDetailModel;
-import com.subex.ngp.usermanagement.model.UserGridModel;
+import com.subex.ngp.usermanagement.model.ExternalUserGridModel;
 import com.subex.ngp.usermanagement.model.UserLoginInfoModel;
 import com.subex.ngp.usermanagement.model.UserLoginStatusModel;
-import com.subex.ngp.usermanagement.model.UserModel;
+import com.subex.ngp.usermanagement.model.ExternalUserModel;
 import com.subex.ngp.usermanagement.model.UserSummaryModel;
 
 @Component
-public class UserServiceImpl {
+public class ExternalUserServiceImpl  {
 
-	private static Logger log = LogManager.getLogger(UserServiceImpl.class);
+	private static Logger log = LogManager.getLogger(ExternalUserServiceImpl.class);
 
 	@Autowired
 	private KeyCloakBuilder keycloakBuilder;
@@ -356,71 +356,7 @@ public class UserServiceImpl {
 	 *
 	 * return predicates.stream().reduce(Predicate::and).orElse(x -> true); }
 	 */
-	public void blockUser(String id) {
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-		attributesMap.put(UserAttribute.STATUS.getLabel(),
-				new ArrayList<String>(Arrays.asList(UserStatus.BLOCKED.getCode().toString())));
-		attributesMap.put(UserAttribute.STATUS_MODIFIED_DATE.getLabel(),
-				new ArrayList<String>(Arrays.asList(String.valueOf(new Date().getTime()))));
-
-		updateAttribute(id, attributesMap);
-
-	}
-
-	public void unblockUser(String id) {
-
-		UserRepresentation userRepresentation = findById(id);
-
-		Date date = new Date();
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-
-		attributesMap.put(UserAttribute.STATUS_MODIFIED_DATE.getLabel(),
-				new ArrayList<String>(Arrays.asList(String.valueOf(date.getTime()))));
-
-		if (!CollectionUtils.isEmpty(getValue(userRepresentation, UserAttribute.ACCOUNT_EXPIRY))) {
-
-			String accountExpiry = getValue(userRepresentation, UserAttribute.ACCOUNT_EXPIRY).get(0);
-
-			if (Long.valueOf(accountExpiry) <= date.getTime())
-				attributesMap.put(UserAttribute.STATUS.getLabel(),
-						new ArrayList<String>(Arrays.asList(UserStatus.EXPIRED.getCode().toString())));
-			else
-				attributesMap.put(UserAttribute.STATUS.getLabel(),
-						new ArrayList<String>(Arrays.asList(UserStatus.ACTIVE.getCode().toString())));
-		} else {
-			attributesMap.put(UserAttribute.STATUS.getLabel(),
-					new ArrayList<String>(Arrays.asList(UserStatus.ACTIVE.getCode().toString())));
-		}
-
-		updateAttribute(id, attributesMap);
-	}
-
-	public void softDeleteUser(String id) {
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-		attributesMap.put(UserAttribute.DELETE_FLAG.getLabel(),
-				new ArrayList<String>(Arrays.asList(Boolean.TRUE.toString())));
-
-		UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(id);
-
-		UserRepresentation userRepresentation = userResource.toRepresentation();
-		userRepresentation.setEnabled(false);
-
-		if (userRepresentation.getAttributes() == null)
-			userRepresentation.setAttributes(new HashMap<String, List<String>>());
-
-		attributesMap.forEach((key, value) -> {
-			userRepresentation.getAttributes().put(key, value);
-		});
-
-		setModifyDetails(userRepresentation, new Date());
-
-		userResource.update(userRepresentation);
-
-	}
+	 
 
 	public void changePassword(String id, ChangePasswordModel changePasswordModel) {
 
@@ -454,7 +390,7 @@ public class UserServiceImpl {
 		userResource.update(userRepresentation);
 	}
 
-	public List<UserGridModel> getUserListing(Integer pageIndex, Integer pageSize, String filter, String sort, String groupId,
+	public List<ExternalUserGridModel> getExternalUserListing(Integer pageIndex, Integer pageSize, String filter, String sort, String groupId,
 			boolean isAndFilter)
 	{
 		List<UserRepresentation> userRepresentations=null;
@@ -476,13 +412,13 @@ public class UserServiceImpl {
 					pageIndex, pageSize);
 		}
 
-		List<UserGridModel> userGridModels = new ArrayList<>();
+		List<ExternalUserGridModel> externalUserGridModels = new ArrayList<>();
 
 		// List<String> clientIds = getClientIdList();
 //		userRepresentations.stream().filter(getUserListFilter(filter, isAndFilter)).filter(getDeleteFilter())
 		paginUserRepresentations.stream().forEach(userRepresentation -> {
 
-			UserGridModel userGridModel = UserRepresentationToUserGridModel.convertUserRepresentationToUserGridModel(
+			ExternalUserGridModel externalUserGridModel = UserRepresentationToUserGridModel.convertUserRepresentationToUserGridModel(
 					userRepresentation, null,
 					countryServiceImpl.getCountries(), languageServiceImpl.getLanguages());
 			/*
@@ -493,16 +429,16 @@ public class UserServiceImpl {
 			 */		
 			
 			if (userRepresentation.getFederationLink() != null) {
-				userGridModel.setIsLdap(true);
+				externalUserGridModel.setIsLdap(true);
 			} else if (userRepresentation.getAttributes().get("isAdUser") != null){
-				userGridModel.setIsLdap(true);
+				externalUserGridModel.setIsLdap(true);
 			} else {
-				userGridModel.setIsLdap(false);
+				externalUserGridModel.setIsLdap(false);
 			}
 			
-			userGridModels.add(userGridModel);
+			externalUserGridModels.add(externalUserGridModel);
 		});
-		return userGridModels;
+		return externalUserGridModels;
 	}
 
 	public List<SearchResultItemModel> getUserListingGlobal(Integer pageIndex, Integer pageSize, String filter,
@@ -613,172 +549,26 @@ public class UserServiceImpl {
 			return predicates.stream().reduce(Predicate::or).orElse(userRepresentation -> true);
 	}
 
-	private Predicate<UserRepresentation> getUserSearchQueryFilter(String str) {
+	 
 
-		List<Predicate<UserRepresentation>> predicates = new ArrayList<Predicate<UserRepresentation>>();
-
-		if (StringUtils.isEmpty(str))
-			return predicates.stream().reduce(Predicate::or).orElse(userRepresentation -> true);
-
-		final String value = str.toLowerCase();
-
-		predicates.add(userRepresentation -> userRepresentation.getUsername().toLowerCase().contains(value));
-
-		predicates.add(userRepresentation -> userRepresentation.getFirstName() != null
-				&& userRepresentation.getFirstName().toLowerCase().contains(value));
-
-		predicates.add(userRepresentation -> userRepresentation.getLastName() != null
-				&& userRepresentation.getLastName().toLowerCase().contains(value));
-
-		predicates.add(userRepresentation -> {
-			return userRepresentation.getAttributes() != null
-					&& !CollectionUtils.isEmpty(userRepresentation.getAttributes().get(UserAttribute.NOTES.getLabel()))
-					&& userRepresentation.getAttributes().get(UserAttribute.NOTES.getLabel()).get(0).toLowerCase()
-							.contains(value);
-		});
-
-		return predicates.stream().reduce(Predicate::or).orElse(userRepresentation -> true);
-	}
-
-
-	private Predicate<UserRepresentation> getUserNameSearchQueryFilter(String str) {
-
-		List<Predicate<UserRepresentation>> predicates = new ArrayList<>();
-
-		if (StringUtils.isEmpty(str))
-			return predicates.stream().reduce(Predicate::or).orElse(userRepresentation -> true);
-
-		final String value = str.toLowerCase();
-
-
-		predicates.add(userRepresentation -> userRepresentation.getFirstName() != null
-				&& userRepresentation.getFirstName().toLowerCase().contains(value));
-
-		predicates.add(userRepresentation -> userRepresentation.getLastName() != null
-				&& userRepresentation.getLastName().toLowerCase().contains(value));
-
-		predicates.add(userRepresentation -> {
-		    StringBuilder userName = new StringBuilder();
-		    if (userRepresentation.getFirstName() != null) {
-		    userName.append(userRepresentation.getFirstName());
-		    }
-
-		    if (userRepresentation.getLastName() != null) {
-			userName.append(" ");
-			userName.append(userRepresentation.getLastName());
-		    }
-		    return userName.length() != 0 && userName.toString().toLowerCase().contains(value);
-		});
-
-		return predicates.stream().reduce(Predicate::or).orElse(userRepresentation -> true);
-	}
-
-
-
-
-	private Comparator<UserRepresentation> getUserrepresentationListSort(String sort) {
-
-		LinkedHashMap<String, String> sortMap = UserManagementHelper.convertToMap(sort);
-
-		List<Comparator<UserRepresentation>> predicates = new ArrayList<>();
-
-		sortMap.forEach((key, value) -> {
-
-			log.debug(":{} has performed sort on column :{} in user detail", MDC.get(USER_ID), key);
-
-			if (UserRepresentationComparator.get(key) != null)
-			{
-				predicates.add(UserRepresentationComparator.get(key).getComparator(value));
-			}
-		});
-
-		return predicates.stream().reduce(Comparator::thenComparing)
-				.orElse(Comparator.comparing(UserRepresentation::getUsername));
-	}
-	private Comparator<UserGridModel> getUserListSort(String sort) {
-
-		LinkedHashMap<String, String> sortMap = UserManagementHelper.convertToMap(sort);
-
-		List<Comparator<UserGridModel>> predicates = new ArrayList<Comparator<UserGridModel>>();
-
-		sortMap.forEach((key, value) ->
-		{
-			log.debug(":{} has performed sort on column :{} in user detail",MDC.get(USER_ID),key);
-
-
-			if (UserGridComparator.get(key) != null)
-				predicates.add(UserGridComparator.get(key).getComparator(value));
-		});
-
-		return predicates.stream().reduce(Comparator::thenComparing)
-				.orElse(Comparator.comparing(UserGridModel::getUserName));
-	}
-
-	/*
-	 * private List<String> getClientIdList() { ClientsResource clients =
-	 * keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).clients(
-	 * ); List<ClientRepresentation> clientRepresentations = clients.findAll();
-	 * clientRepresentations =
-	 * aplicationServiceImpl.removeDefaultClients(clientRepresentations);
-	 *
-	 * return clientRepresentations.stream().map(x ->
-	 * x.getId()).collect(Collectors.toList());
-	 *
-	 * }
-	 *
-	 * private List<Integer> getApplicationAndModuleCount(String userId,
-	 * List<String> clientIds) { Map<String, Set<String>> clientAndRolesMap = new
-	 * HashMap<String, Set<String>>(); int applicationCount = 0; RealmResource realm
-	 * = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm());
-	 *
-	 * List<GroupRepresentation> groups = realm.users().get(userId).groups();
-	 *
-	 * for (GroupRepresentation groupRepresentation : groups) {
-	 *
-	 * GroupResource group = realm.groups().group(groupRepresentation.getId());
-	 *
-	 * for (String clientId : clientIds) { applicationCount =
-	 * getApplicationAndModuleCountForGroup(clientAndRolesMap, applicationCount,
-	 * group, clientId);
-	 *
-	 * } }
-	 *
-	 * return Arrays.asList(applicationCount, getModuleCount(clientAndRolesMap)); }
-	 *
-	 * private int getApplicationAndModuleCountForGroup(Map<String, Set<String>>
-	 * clientAndRolesMap, int applicationCount, GroupResource group, String
-	 * clientId) { RoleScopeResource clientLevelRoles =
-	 * group.roles().clientLevel(clientId); Set<String> roles =
-	 * clientLevelRoles.listEffective().stream().filter(x -> !x.isComposite())
-	 * .map(x -> x.getName()).collect(Collectors.toSet());
-	 *
-	 * if (roles.size() > 0) { if (!clientAndRolesMap.containsKey(clientId)) {
-	 * clientAndRolesMap.put(clientId, roles); applicationCount++;
-	 *
-	 * } else { Set<String> rolesSet = clientAndRolesMap.get(clientId);
-	 * rolesSet.addAll(roles); } } return applicationCount; }
-	 *
-	 * private int getModuleCount(Map<String, Set<String>> clientAndRolesMap) {
-	 * return (int) clientAndRolesMap.entrySet().stream().flatMap(x ->
-	 * x.getValue().stream()).count(); }
-	 */
-	public IdModel createUser(UserModel userModel) {
+ 
+	public IdModel createExternalUser(ExternalUserModel externalUserModel) {
 
 		Date date = new Date();
-		if(userModel.getEnable2FA() == null) {
-			userModel.setEnable2FA(false);
+		if(externalUserModel.getEnable2FA() == null) {
+			externalUserModel.setEnable2FA(false);
 		}
 		UserRepresentation userRepresentation = UserModelToUserRepresentation
-				.convertUserModelToUserRepresentation(userModel, null, date);
+				.convertUserModelToUserRepresentation(externalUserModel, null, date);
 
 		setCreateDetails(userRepresentation, date);
 		setModifyDetails(userRepresentation, date);
 		
-		if(userModel.getIdentityProviderLink() != null) {
+		if(externalUserModel.getIdentityProviderLink() != null) {
 			FederatedIdentityRepresentation federatedIdentity = new FederatedIdentityRepresentation();
-			federatedIdentity.setIdentityProvider(userModel.getIdentityProviderLink());
-			federatedIdentity.setUserId(userModel.getEmail());
-			federatedIdentity.setUserName(userModel.getEmail());
+			federatedIdentity.setIdentityProvider(externalUserModel.getIdentityProviderLink());
+			federatedIdentity.setUserId(externalUserModel.getEmail());
+			federatedIdentity.setUserName(externalUserModel.getEmail());
 			List<FederatedIdentityRepresentation> federatedIdentities = new ArrayList<FederatedIdentityRepresentation>();
 			federatedIdentities.add(federatedIdentity);
 			userRepresentation.setFederatedIdentities(federatedIdentities);
@@ -792,7 +582,7 @@ public class UserServiceImpl {
 		if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
 
 			String uuid = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
-			assignUserToGroups(uuid, userModel.getGroupIds());
+			assignUserToGroups(uuid, externalUserModel.getGroupIds());
 			return new IdModel().id(uuid);
 		} else {
 
@@ -802,123 +592,7 @@ public class UserServiceImpl {
 
 	}
 
-	public void assignUserToGroups(String uuid, List<String> groupNames) {
-
-		if (!CollectionUtils.isEmpty(groupNames)) {
-			UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-					.get(uuid);
-
-			try {
-				userResource.toRepresentation();
-			} catch (NotFoundException nfe) {
-				return;
-			}
-
-			groupNames.forEach(name -> {
-				GroupRepresentation groupRepresentation = findByGroupName(name);
-				if (groupRepresentation != null)
-					userResource.joinGroup(groupRepresentation.getId());
-			});
-		}
-	}
-
-	public GroupRepresentation findByGroupName(String name) {
-
-		try {
-
-			List<GroupRepresentation> keycloakGroupRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).groups().groups();
-			for (GroupRepresentation groupRepresentation : keycloakGroupRepresentations) {
-				if (groupRepresentation.getName().equalsIgnoreCase(name))
-					return groupRepresentation;
-			}
-			return null;
-		} catch (NotFoundException nfe) {
-			return null;
-		}
-	}
-
-	public boolean groupExistsById(String groupUuid) {
-
-		if (StringUtils.isEmpty(groupUuid))
-			return false;
-
-		try {
-			keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).groups().group(groupUuid)
-					.toRepresentation();
-			return true;
-		} catch (NotFoundException nfe) {
-			return false;
-		}
-	}
-
-	public void updateUser(String id, UserModel userModel) {
-
-		userModel.setId(id);
-		if(userModel.getEnable2FA()==null) {
-			userModel.setEnable2FA(false);
-		}
-		UserRepresentation keycloakUserRepresentation = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().get(userModel.getId()).toRepresentation();
-		Date date = new Date();
-
-		if(Objects.nonNull(keycloakUserRepresentation)) {
-			UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-					.get(keycloakUserRepresentation.getId());
-			if(userModel.getEnable2FA()) {
-				List<CredentialRepresentation> credentials = userResource.credentials();
-				credentials.forEach(credential -> {
-					if(credential.getType().equals("otp")) {
-						userModel.setEnable2FA(false);
-					}
-				});
-			}else {
-				List<CredentialRepresentation> credentials = userResource.credentials();
-				credentials.forEach(credential -> {
-					if(credential.getType().equals("otp")) {
-						userResource.removeCredential(credential.getId());
-					}
-				});
-			}
-		}
-
-		UserRepresentation userRepresentation = UserModelToUserRepresentation
-				.convertUserModelToUserRepresentation(userModel, keycloakUserRepresentation, date);
-		
-		if(keycloakUserRepresentation!=null && keycloakUserRepresentation.getFederatedIdentities()!=null && !keycloakUserRepresentation.getFederatedIdentities().isEmpty()) {
-			userRepresentation.singleAttribute("isAdUser", "true");
-		}
-
-		setModifyDetails(userRepresentation, date);
-		if(Objects.nonNull(keycloakUserRepresentation)) {
-			userRepresentation.setEnabled(keycloakUserRepresentation.isEnabled());
-			keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(keycloakUserRepresentation.getId()).update(userRepresentation);
-		}
-
-		leaveAllGroups(id);
-
-		assignUserToGroups(id, userModel.getGroupIds());
-	}
-
-	public void leaveAllGroups(String uuid) {
-
-		UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(uuid);
-		try {
-			userResource.toRepresentation();
-			List<GroupRepresentation> groupRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).users().get(uuid).groups();
-
-			groupRepresentations.forEach(groupRepresentation -> {
-				userResource.leaveGroup(groupRepresentation.getId());
-			});
-
-		} catch (NotFoundException nfe) {
-			return;
-		}
-	}
-
+  
 	public UserModel getUser(String id) {
 
 		UserRepresentation userRepresentation = findById(id);
@@ -942,527 +616,33 @@ public class UserServiceImpl {
 
 		return userModel;
 	}
-
-	public List<GroupRepresentation> getGroupsAssignedToUsers(String userUuid) {
-
-		UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(userUuid);
-		try {
-			userResource.toRepresentation();
-			return keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users().get(userUuid).groups();
-
-		} catch (NotFoundException nfe) {
-			return new ArrayList<GroupRepresentation>();
-		}
-	}
-
-	public void uploadProfilePicture(String userName, MultipartFile multipartFile, String userImageFolder) {
-
-		File folder = new File(userImageFolder);
-		File[] listOfFiles = folder.listFiles((file) -> {
-			String fileName = file.getName();
-			return fileName.substring(0, fileName.lastIndexOf(".")).equals(userName) && !file.isDirectory();
-		});
-
-		Arrays.asList(listOfFiles).forEach(file -> file.delete());
-
-		String multiPartOrgFilename = multipartFile.getOriginalFilename();
-		String newFileName = userName
-				+ (multiPartOrgFilename == null?"":multiPartOrgFilename.substring(multiPartOrgFilename.lastIndexOf(".")));
-
-		try (OutputStream stream=Files.newOutputStream(Paths.get(userImageFolder, newFileName));)
-		{
-			stream.write(multipartFile.getBytes());
-
-		} catch (IOException e) {
-			log.error("Failed to write image to location: {} ", userImageFolder, e);
-		}
-	}
-
-	public UrlModel getProfilePicture(String userName, String userImageFolder) {
-
-		File folder = new File(userImageFolder);
-		File[] listOfFiles = folder.listFiles((file) -> {
-			String fileName = file.getName();
-			return fileName.substring(0, fileName.lastIndexOf(".")).equals(userName) && !file.isDirectory();
-		});
-
-		if (listOfFiles.length == 1) {
-			return new UrlModel().url(IMAGE_URL_PREFIX + listOfFiles[0].getName());
-		}
-		return null;
-	}
-
-	public UserDetailModel getUserDetail(String id) {
-
-		UserRepresentation userRepresentation = findById(id);
-
-		List<GroupRepresentation> groupRepresentations = getGroupsAssignedToUsers(id);
-
-		UserDetailModel userDetailModel = UserRepresentationToUserDetailModel
-				.convertUserRepresentationToUserDetailModel(userRepresentation, groupRepresentations,
-						countryServiceImpl.getCountries(), languageServiceImpl.getLanguages());
-
-		if (userRepresentation.getAttributes() != null) {
-			if (!CollectionUtils.isEmpty(userRepresentation.getAttributes().get(UserAttribute.CREATED_BY.getLabel())))
-				userDetailModel.setCreatedBy(getUserDisplayNameByUserName(
-						userRepresentation.getAttributes().get(UserAttribute.CREATED_BY.getLabel()).get(0)));
-
-			if (!CollectionUtils
-					.isEmpty(userRepresentation.getAttributes().get(UserAttribute.REPORTING_MANAGER_ID.getLabel())))
-				userDetailModel.setReportingManager(getUserDisplayNameByUserName(
-						userRepresentation.getAttributes().get(UserAttribute.REPORTING_MANAGER_ID.getLabel()).get(0)));
-		}
-
-		//userDetailModel.setGroupAccesses(getUserGroupAccesses(id, groupRepresentations));
-
-		AuditEventModel.callAuditLog("USER", "View User Details",
-				"Details of  User " + userDetailModel.getDisplayName()+" Viewed  by "+MDC.get(USER_ID),
-				"Details of  User viewed Succesfully");
-		log.debug("Sucessfully viewed the user Detail: {}",MDC.get(USER_ID));
-
-
-		return userDetailModel;
-	}
-
-	public String getUserDisplayNameById(String userUuid) {
-
-		try {
-			UserRepresentation userRepresentation = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm())
-					.users().get(userUuid).toRepresentation();
-
-			List<String> values = getValue(userRepresentation, UserAttribute.DISPLAY_NAME);
-
-			if (!CollectionUtils.isEmpty(values))
-				return values.get(0);
-			else
-				return null;
-
-		} catch (NotFoundException nfe) {
-			return null;
-		}
-	}
-
-	public String getUserDisplayNameByUserName(String userName) {
-
-		List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().search(userName);
-		if (userRepresentations.size() != 1)
-			return null;
-
-		UserRepresentation userRepresentation = userRepresentations.get(0);
-
-		List<String> values = getValue(userRepresentation, UserAttribute.DISPLAY_NAME);
-
-		if (!CollectionUtils.isEmpty(values))
-			return values.get(0);
-		else
-			return null;
-
-	}
-
-	/*
-	 * private List<UserGroupAccessModel> getUserGroupAccesses(String userUuid,
-	 * List<GroupRepresentation> groupRepresentations) {
-	 *
-	 * List<UserGroupAccessModel> userGroupAccessModels = new
-	 * ArrayList<UserGroupAccessModel>();
-	 *
-	 * ClientsResource clientsResource =
-	 * keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm())
-	 * .clients();
-	 *
-	 * groupRepresentations.forEach(groupRepresentation -> { UserGroupAccessModel
-	 * userGroupAccessModel = new UserGroupAccessModel()
-	 * .groupName(groupRepresentation.getName()).applications(new
-	 * ArrayList<ApplicationModel>());
-	 * removeDefaultClients(clientsResource.findAll()).forEach(clientRepresentation
-	 * -> { userGroupAccessModel.getApplications()
-	 * .add(getApplicationModel(clientRepresentation,
-	 * keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).groups()
-	 * .group(groupRepresentation.getId()).roles(), clientsResource)); });
-	 *
-	 * userGroupAccessModels.add(userGroupAccessModel); }); return
-	 * userGroupAccessModels; }
-	 *
-	 * private List<ClientRepresentation>
-	 * removeDefaultClients(List<ClientRepresentation> clients) {
-	 *
-	 * List<String> deafultClients = DefaultClientConstants.DEFAULT_CLIENT_LIST;
-	 * ListIterator<ClientRepresentation> listIterator = clients.listIterator();
-	 * while (listIterator.hasNext()) { ClientRepresentation client =
-	 * listIterator.next(); if (deafultClients.contains(client.getName()))
-	 * listIterator.remove(); } return clients; }
-	 *
-	 * private ApplicationModel getApplicationModel(ClientRepresentation
-	 * clientRepresentation, RoleMappingResource groupRoles, ClientsResource
-	 * clientsResource) {
-	 *
-	 * ApplicationModel applicationModel = new ApplicationModel();
-	 * applicationModel.setId(clientRepresentation.getId());
-	 * applicationModel.setClientId(clientRepresentation.getClientId());
-	 * applicationModel.setName(clientRepresentation.getName());
-	 * applicationModel.setDescription(clientRepresentation.getDescription());
-	 * List<RoleRepresentation> roleRepresentationList =
-	 * groupRoles.clientLevel(clientRepresentation.getId()) .listEffective();
-	 * applicationModel.setModules(aplicationServiceImpl.getModules(clientsResource.
-	 * get(clientRepresentation.getId()), getGroupRoles(roleRepresentationList)));
-	 *
-	 * return applicationModel; }
-	 *
-	 * private List<String> getGroupRoles(List<RoleRepresentation>
-	 * roleRepresentationList) {
-	 *
-	 * return roleRepresentationList.stream().map(x ->
-	 * x.getName()).collect(Collectors.toList()); }
-	 */
-	public void extendAccountExpiryDate(String id, DateModel dateModel) {
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-		attributesMap.put(UserAttribute.ACCOUNT_EXPIRY.getLabel(),
-				new ArrayList<String>(Arrays.asList(dateModel.getDate().toString())));
-
-		updateAttribute(id, attributesMap);
-	}
-
-	public void addUserConfiguration(ConfigurationModel configurationModel) {
-
-		UserRepresentation userRepresentation = findByUserName(session.getUserId());
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-		attributesMap.put(configurationModel.getKey(), UserManagementHelper.split(configurationModel.getValue(), 255));
-
-		updateAttribute(userRepresentation.getId(), attributesMap);
-	}
-
-	public ConfigurationModel getConfiguration(String key) {
-
-		UserRepresentation userRepresentation = findByUserName(session.getUserId());
-
-		ConfigurationModel configurationModel = new ConfigurationModel();
-		configurationModel.setKey(key);
-
-		if (userRepresentation.getAttributes() != null
-				&& !CollectionUtils.isEmpty(userRepresentation.getAttributes().get(key)))
-			configurationModel.setValue(String.join("", userRepresentation.getAttributes().get(key)));
-
-		return configurationModel;
-	}
-
-	private List<String> getValue(UserRepresentation userRepresentation, UserAttribute userAttribute) {
-
-		if (userRepresentation!=null && userRepresentation.getAttributes() != null) {
-			List<String> values = userRepresentation.getAttributes().get(userAttribute.getLabel());
-
-			if (values == null)
-				return new ArrayList<String>();
-
-			return userRepresentation.getAttributes().get(userAttribute.getLabel());
-		}
-		return new ArrayList<String>();
-	}
-
-	public boolean validate(UserModel userModel) {
-
-		if (StringUtils.isEmpty(userModel.getUserName()) || StringUtils.isEmpty(userModel.getDisplayName()))
-			return false;
-		if (userModel.getReportingManagerId() != null && !existsByUserName(userModel.getReportingManagerId()))
-			return false;
-		if (!EmailValidator.validate(userModel.getEmail()))
-			return false;
-		return true;
-	}
-
-	public boolean existsByUserName(String userName) {
-
-		List<UserRepresentation> keycloakUserRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().search(userName, true);
-		if (keycloakUserRepresentations.isEmpty())
-			return false;
-		else
-			return true;
-	}
-
-	public boolean existsByEmail(String email) {
-
-		List<UserRepresentation> keycloakUserRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().search(email, 0, Integer.MAX_VALUE);
-		return keycloakUserRepresentations.isEmpty() ? Boolean.FALSE : Boolean.TRUE;
-
-	}
-
-
-	public boolean existsById(String id) {
-
-		try {
-			keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users().get(id).toRepresentation();
-			return true;
-		} catch (NotFoundException nfe) {
-			return false;
-		}
-
-	}
-
-	public boolean existsByIdWithName(String id, String userName) {
-
-		UserRepresentation userRepresentation = findByUserName(userName);
-
-		if (userRepresentation == null)
-			return true;
-		if (userRepresentation.getId().equalsIgnoreCase(id))
-			return true;
-		return false;
-	}
-
-	public boolean existsByIdWithEmail(String id, String email) {
-
-		UserRepresentation userRepresentation = findByEmail(email);
-
-		if (userRepresentation == null)
-			return true;
-		return userRepresentation.getId().equalsIgnoreCase(id) ? Boolean.TRUE : Boolean.FALSE;
-
-	}
-
-	public boolean isDeleted(String id) {
-
-		UserRepresentation userRepresentation = findById(id);
-
-		if (userRepresentation != null) {
-			List<String> values = getValue(userRepresentation, UserAttribute.DELETE_FLAG);
-
-			if (values.size() == 1 && values.get(0).equalsIgnoreCase(Boolean.TRUE.toString()))
-				return true;
-		}
-		return false;
-	}
-
-	public UserRepresentation findByUserName(String name) {
-
-		try {
-			List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).users().search(name,true);
-
-			if (userRepresentations.isEmpty())
-				return null;
-
-			UserRepresentation userRepresentation = userRepresentations.get(0);
-
-			List<CredentialRepresentation> credentialRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).users().get(userRepresentation.getId()).credentials();
-
-			userRepresentation.setCredentials(credentialRepresentations);
-
-			return userRepresentation;
-		} catch (NotFoundException nfe) {
-			return null;
-		}
-	}
-
-	public UserRepresentation findByEmail(String email) {
-
-		try {
-			List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).users().search(email, 0, Integer.MAX_VALUE);
-			if (userRepresentations.isEmpty())
-				return null;
-
-			UserRepresentation userRepresentation = userRepresentations.get(0);
-
-			List<CredentialRepresentation> credentialRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).users().get(userRepresentation.getId()).credentials();
-
-			userRepresentation.setCredentials(credentialRepresentations);
-
-			return userRepresentation;
-		} catch (NotFoundException nfe) {
-			return null;
-		}
-	}
-
-	public UserRepresentation findById(String id) {
-
-		try {
-			UserRepresentation userRepresentation = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm())
-					.users().get(id).toRepresentation();
-
-			keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users().get(id).groups();
-			List<CredentialRepresentation> credentialRepresentations = keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm()).users().get(id).credentials();
-			userRepresentation.setCredentials(credentialRepresentations);
-
-			return userRepresentation;
-		} catch (NotFoundException nfe) {
-
-			log.error("ERROR: {} ", nfe.getMessage());
-			return null;
-		}
-	}
-
-	public void deleteUserByUserName(String userName) {
-		UsersResource users = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users();
-
-		List<UserRepresentation> userRepresentations = users.search(userName,true);
-
-		if (userRepresentations == null || userRepresentations.size() != 1)
-			return;
-
-		UserRepresentation userRepresentation = userRepresentations.get(0);
-
-		users.delete(userRepresentation.getId());
-	}
-
-	public void updateAttribute(String id, Map<String, List<String>> attributesMap) {
-
-		if (attributesMap == null)
-			return;
-
-		UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(id);
-
-		UserRepresentation userRepresentation = userResource.toRepresentation();
-
-		if (userRepresentation.getAttributes() == null)
-			userRepresentation.setAttributes(new HashMap<String, List<String>>());
-
-		attributesMap.forEach((key, value) -> {
-			userRepresentation.getAttributes().put(key, value);
-			if(key.contentEquals(UserAttribute.STATUS.getLabel())) {
-				userRepresentation.setEnabled(!value.get(0).contentEquals(UserStatus.BLOCKED.getCode().toString()));
-			}
-		});
-
-		setModifyDetails(userRepresentation, new Date());
-
-		userResource.update(userRepresentation);
-	}
-
-	private void setCreateDetails(UserRepresentation userRepresentation, Date date) {
-
-		userRepresentation.singleAttribute(UserAttribute.CREATED_BY.getLabel(), session.getUserId());
-		userRepresentation.singleAttribute(UserAttribute.CREATED_AT.getLabel(), String.valueOf(date.getTime()));
-	}
-
-	public void setModifyDetails(UserRepresentation userRepresentation, Date date) {
-
-		userRepresentation.singleAttribute(UserAttribute.MODIFIED_BY.getLabel(), session.getUserId());
-		userRepresentation.singleAttribute(UserAttribute.MODIFIED_AT.getLabel(), String.valueOf(date.getTime()));
-	}
-
-	public String getKeyCloakIdFromUserName(String userName) {
-
-		UserRepresentation userRepresentation = findByUserName(userName);
-
-		if (userRepresentation == null)
-			return null;
-
-		return userRepresentation.getId();
-	}
-
-	public String getUserNameFromKeyCloakId(String id) {
-
-		UserRepresentation userRepresentation = findById(id);
-
-		if (userRepresentation == null)
-			return null;
-
-		return userRepresentation.getUsername();
-	}
-
-	public Boolean deleteProfilePicture(String userName, String userImageFolder) {
-		File folder = new File(userImageFolder);
-		File[] listOfFiles = folder.listFiles((file) -> {
-			String fileName = file.getName();
-			return fileName.substring(0, fileName.lastIndexOf(".")).equals(userName) && !file.isDirectory();
-		});
-
-		if (listOfFiles.length == 0) {
-			return Boolean.FALSE;
-		}
-
-		if (listOfFiles.length == 1) {
-			return listOfFiles[0].delete();
-		}
-		return false;
-	}
-
-	public List<UserGridModel> getUserListingCustomized(Integer pageIndex, Integer pageSize, String filter, String sort,
+	 
+ 
+	public List<ExternalUserGridModel> getExternalUserListingCustomized(Integer pageIndex, Integer pageSize, String filter, String sort,
 			boolean isAndFilter)
 	{
 
-		List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
+		List<ExternalUserRepresentation> userRepresentations = keycloakBuilder.getInstance()
 				.realm(keycloakCustomConfig.getRealm()).users().search(null, 0, Integer.MAX_VALUE);
 
-		List<UserGridModel> customizeduserGridModels = new ArrayList<>();
+		List<ExternalUserGridModel> customizeduserGridModels = new ArrayList<>();
 
 		userRepresentations.stream().filter(getUserListFilter(filter, isAndFilter))
 				.forEach(userRepresentation -> {
 
-					UserGridModel userGridModel=new UserGridModel();
+					ExternalUserGridModel externalUserGridModel=new ExternalUserGridModel();
 
-					userGridModel.setId(userRepresentation.getUsername());
-					userGridModel.setUserName(userRepresentation.getUsername());
-					userGridModel.setEmail(userRepresentation.getEmail());
-					customizeduserGridModels.add(userGridModel);
+					externalUserserGridModel.setId(userRepresentation.getUsername());
+					externalUserserGridModel.setUserName(userRepresentation.getUsername());
+					externalUserserGridModel.setEmail(userRepresentation.getEmail());
+					customizeduserGridModels.add(externalUserserGridModel);
 				});
 
 		return getPage(customizeduserGridModels.stream().sorted(getUserListSort(sort)).collect(Collectors.toList()),
 				pageIndex,		pageSize);
 	}
-
-	public Integer getUsersCount(String filter) {
-
-		Integer usersCount = 0;
-		Map<String, String> filterMap = new HashMap<>();
-		if (filter != null) {
-			filterMap = UserManagementHelper.convertToMap(filter);
-		}
-		
-		if (filterMap.containsKey("groupName")) {
-			String groupName = filterMap.get("groupName");
-			if (groupName != null) {
-				String groupid = groupServiceImpl.getKeyCloakIdFromName(groupName);
-
-				usersCount += (int) getMemberCountInGroups(groupid);
-				if (filterMap.size() < 2) {
-					return usersCount;
-				}
-			}
-		}
-		
-		List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().search(null, 0, Integer.MAX_VALUE);
-		usersCount += filter == null ? userRepresentations.size()
-				: userRepresentations.stream().filter(getUserListFilter(filter, true)).collect(Collectors.toList())
-						.size();
-		return usersCount;
-	}
-
-	public List<String> getUserGroupNames(String id) {
-		List<GroupRepresentation> groupRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().get(id).groups();
-
-		List<String> groupNames = new ArrayList<>();
-
-		for (GroupRepresentation groupRepresentation : groupRepresentations) {
-			groupNames.add(groupRepresentation.getName());
-		}
-		return groupNames;
-	}
-	
-	public List<String> getUserGroupIds(String id) {
-		List<GroupRepresentation> groupRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().get(id).groups();
-
-		List<String> groupIds = new ArrayList<>();
-
-		for (GroupRepresentation groupRepresentation : groupRepresentations) {
-			groupIds.add(groupRepresentation.getId());
-		}
-		return groupIds;
-	}
-
-	public List<String> getUserNames() {
+ 
+	public List<String> getExternalUserNames() {
 		List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
 				.realm(keycloakCustomConfig.getRealm()).users().search(null, 0, Integer.MAX_VALUE);
 
@@ -1475,37 +655,6 @@ public class UserServiceImpl {
 		return userNames;
 	}
 
-	private String getFrom(String interval)
-	{
-		LocalDate to = LocalDate.now();
-		String from = null;
-
-		if (interval == null)
-			return from;
-
-		switch (Intervals.getValue(interval)) {
-
-		case LAST_24_HOURS:
-			from = to.minusDays(1L).toString();
-
-			break;
-		case LAST_7_DAYS:
-			from = to.minusDays(7L).toString();
-			break;
-		case LAST_2_DAYS:
-			from = to.minusDays(2L).toString();
-			break;
-		case LAST_30_DAYS:
-			from = to.minusDays(30L).toString();
-
-			break;
-
-		default:
-			from = LocalDate.now().toString();
-			break;
-		}
-
-		return from;
-	}
+	 
 
 }
