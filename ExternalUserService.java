@@ -48,7 +48,9 @@ public class ExternalUserService implements UserExternalApiDelegate {
 	@Autowired
 	private ExternalUserModel externalUserModel;
 	
-	
+	@Autowired
+	private UserServiceImpl userServiceImpl;
+
 	@Autowired
 	private GroupServiceImpl groupServiceImpl;
 
@@ -149,7 +151,7 @@ public class ExternalUserService implements UserExternalApiDelegate {
 			return new ResponseEntity<>(invalidUserDetails,HttpStatus.OK);
 		
 
-		IdModel idModel = externalUserServiceImpl.createUser(externalUserModel);
+		IdModel idModel = externalUserServiceImpl.createExternalUser(externalUserModel);
 
 		if (idModel == null)
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -166,15 +168,6 @@ public class ExternalUserService implements UserExternalApiDelegate {
 		return new ResponseEntity<>(idModel.id(externalUserServiceImpl.getUserNameFromKeyCloakId(idModel.getId())),
 				HttpStatus.CREATED);
 	}
- 
- 
-
-	 
- 
- 
-	
-	  
- 
 
 }
 
