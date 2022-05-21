@@ -85,7 +85,7 @@ import com.subex.ngp.usermanagement.model.UserSummaryModel;
 @Component
 public class ExternalUserServiceImpl {
 
-	private static Logger log = LogManager.getLogger(UserServiceImpl.class);
+	private static Logger log = LogManager.getLogger(ExternalUserServiceImpl.class);
 
 	@Autowired
 	private KeyCloakBuilder keycloakBuilder;
@@ -126,340 +126,12 @@ public class ExternalUserServiceImpl {
 
 	private static final String NAME="name";
 
+ 
+  
 
-	public UserSummaryModel getUserSummary() {
+ 
 
-		int active = 0, blocked = 0, expired = 0;
-
-		List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().search(null, 0, Integer.MAX_VALUE);
-
-		for (UserRepresentation userRepresentation : userRepresentations) {
-				if (userRepresentation.isEnabled()==true) {
-					active++;
-				}
-				else if (userRepresentation.isEnabled()==false)
-					blocked++;
-		}
-
-		UserSummaryModel userSummaryModel = new UserSummaryModel();
-		userSummaryModel.setActive(new BigDecimal(active));
-		userSummaryModel.setBlocked(new BigDecimal(blocked));
-		userSummaryModel.setExpired(new BigDecimal(expired));
-		userSummaryModel.setTotal(new BigDecimal(active + blocked + expired));
-
-
-		return userSummaryModel;
-	}
-
-	public UserLoginStatusModel getLoginStatus(String interval,String userId) {
-
-		UserLoginStatusModel userLoginStatusModel = new UserLoginStatusModel();
-		userLoginStatusModel.setSuccessful(new BigDecimal(0));
-		userLoginStatusModel.setFailed(new BigDecimal(0));
-
-		List<String> userIds = new ArrayList<>();
-
-		String from = getFrom(interval);
-
-
-		log.debug("The from date in the login status is {}",from);
-
-
-		List<String> eventsList = new ArrayList<>();
-		eventsList.add(KeyCloakEventType.LOGIN.getType());
-		eventsList.add(KeyCloakEventType.LOGIN_ERROR.getType());
-
-		if (userId != null) {
-			RealmResource realmResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm());
-			List<UserRepresentation> userRepresentations = realmResource.users().search(userId, 0, Integer.MAX_VALUE);
-			userIds = userRepresentations.stream()
-					.map(userRepresentation -> userRepresentation.getId())
-					.collect(Collectors.toList());
-			eventsList.add(KeyCloakEventType.LOGIN.getType());
-			eventsList.add(KeyCloakEventType.LOGIN_ERROR.getType());
-		}else {
-			userIds.add(null);
-		}
-
-		List<EventRepresentation> eventRepresentations = new ArrayList<>();
-		for(String users : userIds) {
-			eventRepresentations.addAll(keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm())
-					.getEvents(eventsList, null, users, from, null, null, 0, Integer.MAX_VALUE));
-		}
-
-		eventRepresentations.forEach(eventRepresentation -> {
-
-			if (eventRepresentation.getType().equals(KeyCloakEventType.LOGIN.getType()))
-				userLoginStatusModel.setSuccessful(userLoginStatusModel.getSuccessful().add(new BigDecimal(1)));
-			else
-				userLoginStatusModel.setFailed(userLoginStatusModel.getFailed().add(new BigDecimal(1)));
-
-		});
-
-		return userLoginStatusModel;
-	}
-
-	/*
-	 * private Stream<EventRepresentation>
-	 * filterEventRepresentations(List<EventRepresentation> eventRepresentations,
-	 * Long from, Long to,String userId) {
-	 *
-	 * Stream<EventRepresentation> stream = eventRepresentations.stream();
-	 *
-	 * if (from != null && to != null) return stream.filter(e -> e.getTime() >= from
-	 * && e.getTime() <= to);
-	 *
-	 * if(userId!=null) return stream.filter(e -> e.getUserId()!=null &&
-	 * e.getUserId().equals(userId));
-	 *
-	 * return stream; }
-	 */
-	public List<UserLoginInfoModel> getConnectedUsers(String interval, String filter, Integer pageSize,
-			Integer pageIndex, String sort) {
-
-
-		final List<UserLoginInfoModel> userLoginInfoModels = new ArrayList<>();
-		List<String> eventsList = new ArrayList<>();
-
-		Map<String, String> filterMap = UserManagementHelper.convertToMap(filter);
-
-		List<String> userIds = new ArrayList<>();
-
-		if (filterMap.containsKey(STATUS)) {
-
-			if (filterMap.get(STATUS).equalsIgnoreCase("ALL")) {
-				eventsList.add(KeyCloakEventType.LOGIN.getType());
-				eventsList.add(KeyCloakEventType.LOGIN_ERROR.getType());
-			} else if (filterMap.get(STATUS).equals(LoginStatus.SUCCESSFUL.getKey()))
-				eventsList.add(KeyCloakEventType.LOGIN.getType());
-			else if (filterMap.get(STATUS).equals(LoginStatus.FAILED.getKey()))
-				eventsList.add(KeyCloakEventType.LOGIN_ERROR.getType());
-
-		}
-
-		if (filterMap.containsKey(USER_ID)) {
-			RealmResource realmResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm());
-			List<UserRepresentation> userRepresentations = realmResource.users().search(filterMap.get(USER_ID), 0, Integer.MAX_VALUE);
-			userIds = userRepresentations.stream()
-					.map(userRepresentation -> userRepresentation.getId())
-					.collect(Collectors.toList());
-			if(userIds.isEmpty())
-				return userLoginInfoModels;
-			eventsList.add(KeyCloakEventType.LOGIN.getType());
-			eventsList.add(KeyCloakEventType.LOGIN_ERROR.getType());
-
-		}else {
-			userIds.add(null);
-		}
-		String from=getFrom(interval);
-
-		List<EventRepresentation> EventRepresentations = new ArrayList<>();
-		for(String userId : userIds) {
-			EventRepresentations.addAll(keycloakBuilder.getInstance()
-					.realm(keycloakCustomConfig.getRealm())
-					.getEvents(eventsList, null, userId, from, null, null, 0, Integer.MAX_VALUE));
-		}
-		List<EventRepresentation> sortedEventRepresentations =
-				getPage(EventRepresentations.stream()
-				.sorted(Comparator.comparing(EventRepresentation::getTime).reversed())
-				.collect(Collectors.toList()),pageIndex,pageSize);
-		sortedEventRepresentations.stream().forEach(eventRepresentation -> {
-			userLoginInfoModels.add(setUserLoginInfoModel(eventRepresentation));
-		});
-
-		return userLoginInfoModels;
-	}
-
-	public <T> List<T> getPage(List<T> list, Integer pageIndex, Integer pageSize) {
-
-		if (list == null)
-			return Collections.emptyList();
-		else if (pageSize == null || pageSize.intValue() <= 0)
-			pageSize = list.size();
-
-		if (pageIndex == null || pageIndex.intValue() < 0)
-			pageIndex = DEFAULT_PAGE_INDEX;
-
-		int fromIndex = pageIndex.intValue() * pageSize.intValue();
-
-		if (list.size() < fromIndex) {
-			return Collections.emptyList();
-		}
-
-		return list.subList(fromIndex, Math.min(fromIndex + pageSize.intValue(), list.size()));
-	}
-
-	private UserLoginInfoModel setUserLoginInfoModel(EventRepresentation eventRepresentation) {
-
-		UserLoginInfoModel userLoginInfoModel = new UserLoginInfoModel();
-
-		UserRepresentation userRepresentation=null;
-
-		if (eventRepresentation.getUserId() != null)
-			userRepresentation = findById(eventRepresentation.getUserId());
-
-		List<String> values = getValue(userRepresentation, UserAttribute.DISPLAY_NAME);
-
-		if (!CollectionUtils.isEmpty(values))
-		{
-			userLoginInfoModel.setName(getValue(userRepresentation, UserAttribute.DISPLAY_NAME).get(0));
-		}
-		else if (userRepresentation != null && userRepresentation.getFederatedIdentities() != null && userRepresentation.getFederatedIdentities().size() > 0){
-			userLoginInfoModel.setName(userRepresentation.getFirstName() + " " + userRepresentation.getLastName());
-		}
-		else {
-			userLoginInfoModel.setName("Invalid User");
-		}
-		if(userRepresentation!=null&&userRepresentation.getUsername()!=null)
-			userLoginInfoModel.setUserName(userRepresentation.getUsername());
-		userLoginInfoModel.setSourceAddress(eventRepresentation.getIpAddress());
-		userLoginInfoModel.setDescription(KeyCloakEventType.getDescription(eventRepresentation.getType()));
-		userLoginInfoModel.setDatetime(eventRepresentation.getTime());
-		userLoginInfoModel.setStatus(KeyCloakEventType.getDisplay(eventRepresentation.getType()));
-
-		return userLoginInfoModel;
-	}
-
-
-
-	/*
-	 * private Predicate<EventRepresentation> getFilter(Long from, Long to, String
-	 * filter) {
-	 *
-	 * Map<String, String> filterMap = UserManagementHelper.convertToMap(filter);
-	 *
-	 * List<Predicate<EventRepresentation>> predicates = new
-	 * ArrayList<Predicate<EventRepresentation>>();
-	 *
-	 * if (from != null && to != null) predicates.add(eventRepresentation ->
-	 * eventRepresentation.getTime() >= from && eventRepresentation.getTime() <=
-	 * to);
-	 *
-	 * if (filterMap.containsKey(STATUS)) {
-	 *
-	 * if (filterMap.get(STATUS).equalsIgnoreCase("ALL")) predicates.add(
-	 * eventRepresentation ->
-	 * (eventRepresentation.getType().equals(KeyCloakEventType.LOGIN.getType()) ||
-	 * eventRepresentation.getType().equals(KeyCloakEventType.LOGIN_ERROR.getType())
-	 * ));
-	 *
-	 * else if (filterMap.get(STATUS).equals(LoginStatus.SUCCESSFUL.getKey()))
-	 * predicates.add( eventRepresentation ->
-	 * eventRepresentation.getType().equals(KeyCloakEventType.LOGIN.getType()));
-	 * else if (filterMap.get(STATUS).equals(LoginStatus.FAILED.getKey()))
-	 * predicates.add(eventRepresentation -> eventRepresentation.getType()
-	 * .equals(KeyCloakEventType.LOGIN_ERROR.getType()));
-	 *
-	 * }
-	 *
-	 * if (filterMap.containsKey(USER_ID)) { String
-	 * id=getKeyCloakIdFromUserName(filterMap.get(USER_ID));
-	 * predicates.add(eventRepresentation -> eventRepresentation.getUserId()!=null
-	 * &&eventRepresentation.getUserId().equals(id)); }
-	 *
-	 * return predicates.stream().reduce(Predicate::and).orElse(x -> true); }
-	 */
-	public void blockUser(String id) {
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-		attributesMap.put(UserAttribute.STATUS.getLabel(),
-				new ArrayList<String>(Arrays.asList(UserStatus.BLOCKED.getCode().toString())));
-		attributesMap.put(UserAttribute.STATUS_MODIFIED_DATE.getLabel(),
-				new ArrayList<String>(Arrays.asList(String.valueOf(new Date().getTime()))));
-
-		updateAttribute(id, attributesMap);
-
-	}
-
-	public void unblockUser(String id) {
-
-		UserRepresentation userRepresentation = findById(id);
-
-		Date date = new Date();
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-
-		attributesMap.put(UserAttribute.STATUS_MODIFIED_DATE.getLabel(),
-				new ArrayList<String>(Arrays.asList(String.valueOf(date.getTime()))));
-
-		if (!CollectionUtils.isEmpty(getValue(userRepresentation, UserAttribute.ACCOUNT_EXPIRY))) {
-
-			String accountExpiry = getValue(userRepresentation, UserAttribute.ACCOUNT_EXPIRY).get(0);
-
-			if (Long.valueOf(accountExpiry) <= date.getTime())
-				attributesMap.put(UserAttribute.STATUS.getLabel(),
-						new ArrayList<String>(Arrays.asList(UserStatus.EXPIRED.getCode().toString())));
-			else
-				attributesMap.put(UserAttribute.STATUS.getLabel(),
-						new ArrayList<String>(Arrays.asList(UserStatus.ACTIVE.getCode().toString())));
-		} else {
-			attributesMap.put(UserAttribute.STATUS.getLabel(),
-					new ArrayList<String>(Arrays.asList(UserStatus.ACTIVE.getCode().toString())));
-		}
-
-		updateAttribute(id, attributesMap);
-	}
-
-	public void softDeleteUser(String id) {
-
-		Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-		attributesMap.put(UserAttribute.DELETE_FLAG.getLabel(),
-				new ArrayList<String>(Arrays.asList(Boolean.TRUE.toString())));
-
-		UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(id);
-
-		UserRepresentation userRepresentation = userResource.toRepresentation();
-		userRepresentation.setEnabled(false);
-
-		if (userRepresentation.getAttributes() == null)
-			userRepresentation.setAttributes(new HashMap<String, List<String>>());
-
-		attributesMap.forEach((key, value) -> {
-			userRepresentation.getAttributes().put(key, value);
-		});
-
-		setModifyDetails(userRepresentation, new Date());
-
-		userResource.update(userRepresentation);
-
-	}
-
-	public void changePassword(String id, ChangePasswordModel changePasswordModel) {
-
-		CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-		credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
-		credentialRepresentation.setValue(changePasswordModel.getNewPassword());
-
-		UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
-				.get(id);
-
-		Date date = new Date();
-
-		UserRepresentation userRepresentation = userResource.toRepresentation();
-		try {
-			userResource.resetPassword(credentialRepresentation);
-		} catch(BadRequestException e) {
-			Response response = e.getResponse();
-		    try {
-		       Map error = JsonSerialization.readValue((ByteArrayInputStream) response.getEntity(), Map.class);
-		        throw new ChangePasswordException(HttpStatus.BAD_REQUEST, error.get("error_description").toString());
-		    } catch (IOException ex) {
-		        ex.printStackTrace();
-		    }
-		}
-		setModifyDetails(userRepresentation, date);
-		userRepresentation.singleAttribute(UserAttribute.PASSWORD_CHANGED_DATE.getLabel(),
-				String.valueOf(date.getTime()));
-		userRepresentation.singleAttribute(UserAttribute.PASSWORD_EXPIRY_DATE.getLabel(),
-				String.valueOf(CalendarUtil.addDaysToDate(date, PasswordHelper.PASSWORD_EXPIRY_DAYS).getTime()));
-
-		userResource.update(userRepresentation);
-	}
-
-	public List<UserGridModel> getUserListing(Integer pageIndex, Integer pageSize, String filter, String sort, String groupId,
+	public List<ExternalUserGridModel> getExternalUserListing(Integer pageIndex, Integer pageSize, String filter, String sort, String groupId,
 			boolean isAndFilter)
 	{
 		List<UserRepresentation> userRepresentations=null;
@@ -476,18 +148,18 @@ public class ExternalUserServiceImpl {
 		{
 			userRepresentations= realmResource.users().search(null, 0, Integer.MAX_VALUE);
 			paginUserRepresentations = getPage(
-					userRepresentations.stream().filter(getUserListFilter(filter, isAndFilter))
+					userRepresentations.stream().filter(getExternalUserListFilter(filter, isAndFilter))
 							.sorted(getUserrepresentationListSort(sort)).collect(Collectors.toList()),
 					pageIndex, pageSize);
 		}
 
-		List<UserGridModel> userGridModels = new ArrayList<>();
+		List<ExternalUserGridModel> ExternaluserGridModels = new ArrayList<>();
 
 		// List<String> clientIds = getClientIdList();
 //		userRepresentations.stream().filter(getUserListFilter(filter, isAndFilter)).filter(getDeleteFilter())
 		paginUserRepresentations.stream().forEach(userRepresentation -> {
 
-			UserGridModel userGridModel = UserRepresentationToUserGridModel.convertUserRepresentationToUserGridModel(
+			ExternalUserGridModel ExternaluserGridModel = UserRepresentationToUserGridModel.convertUserRepresentationToUserGridModel(
 					userRepresentation, null,
 					countryServiceImpl.getCountries(), languageServiceImpl.getLanguages());
 			/*
@@ -498,49 +170,19 @@ public class ExternalUserServiceImpl {
 			 */		
 			
 			if (userRepresentation.getFederationLink() != null) {
-				userGridModel.setIsLdap(true);
+				ExternaluserGridModel.setIsLdap(true);
 			} else if (userRepresentation.getAttributes().get("isAdUser") != null){
-				userGridModel.setIsLdap(true);
+				ExternaluserGridModel.setIsLdap(true);
 			} else {
-				userGridModel.setIsLdap(false);
+				ExternaluserGridModel.setIsLdap(false);
 			}
 			
-			userGridModels.add(userGridModel);
+			ExternaluserGridModels.add(ExternaluserGridModel);
 		});
-		return userGridModels;
+		return ExternaluserGridModels;
 	}
 
-	public List<SearchResultItemModel> getUserListingGlobal(Integer pageIndex, Integer pageSize, String filter,
-			String sort, boolean isAndFilter) {
-		List<UserRepresentation> userRepresentations = null;
-
-		RealmResource realmResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm());
-		userRepresentations = realmResource.users().search(filter, 0, Integer.MAX_VALUE);
-
-		List<SearchResultItemModel> modelList = new ArrayList<>();
-
-		for (UserRepresentation userRepresentation : userRepresentations) {
-			SearchResultItemModel model = new SearchResultItemModel();
-			model.setValue(userRepresentation.getUsername());
-			Map<String, List<String>> attributes = userRepresentation.getAttributes();
-
-			if (!CollectionUtils.isEmpty(attributes.get(UserAttribute.DISPLAY_NAME.getLabel())))
-				model.setName(attributes.get(UserAttribute.DISPLAY_NAME.getLabel()).get(0));
-			if (!CollectionUtils.isEmpty(attributes.get(UserAttribute.NOTES.getLabel())))
-				model.setDescription(attributes.get(UserAttribute.NOTES.getLabel()).get(0));
-
-			if (userRepresentation.getFederationLink() != null) {
-				model.setIsLdapUser(true);
-			} else if (userRepresentation.getAttributes().get("isAdUser") != null){
-				model.setIsLdapUser(true);
-			} else {
-				model.setIsLdapUser(false);
-			}
-			modelList.add(model);
-		}
-
-		return modelList;
-	}
+ 
 
 	public Boolean getIsFederated() {
 		Boolean isFederationLink = false;
@@ -700,11 +342,11 @@ public class ExternalUserServiceImpl {
 		return predicates.stream().reduce(Comparator::thenComparing)
 				.orElse(Comparator.comparing(UserRepresentation::getUsername));
 	}
-	private Comparator<UserGridModel> getUserListSort(String sort) {
+	private Comparator<ExternalUserGridModel> getExternalUserListSort(String sort) {
 
 		LinkedHashMap<String, String> sortMap = UserManagementHelper.convertToMap(sort);
 
-		List<Comparator<UserGridModel>> predicates = new ArrayList<Comparator<UserGridModel>>();
+		List<Comparator<ExternalUserGridModel>> predicates = new ArrayList<Comparator<ExternalUserGridModel>>();
 
 		sortMap.forEach((key, value) ->
 		{
@@ -716,7 +358,7 @@ public class ExternalUserServiceImpl {
 		});
 
 		return predicates.stream().reduce(Comparator::thenComparing)
-				.orElse(Comparator.comparing(UserGridModel::getUserName));
+				.orElse(Comparator.comparing(ExternalUserGridModel::getUserName));
 	}
 
 	/*
@@ -767,23 +409,23 @@ public class ExternalUserServiceImpl {
 	 * return (int) clientAndRolesMap.entrySet().stream().flatMap(x ->
 	 * x.getValue().stream()).count(); }
 	 */
-	public IdModel createUser(UserModel userModel) {
+	public IdModel createExternalUser(ExternalUserModel externalUserModel) {
 
 		Date date = new Date();
-		if(userModel.getEnable2FA() == null) {
-			userModel.setEnable2FA(false);
+		if(externalUserModel.getEnable2FA() == null) {
+			externalUserModel.setEnable2FA(false);
 		}
 		UserRepresentation userRepresentation = UserModelToUserRepresentation
-				.convertUserModelToUserRepresentation(userModel, null, date);
+				.convertUserModelToUserRepresentation(externalUserModel, null, date);
 
 		setCreateDetails(userRepresentation, date);
 		setModifyDetails(userRepresentation, date);
 		
-		if(userModel.getIdentityProviderLink() != null) {
+		if(externalUserModel.getIdentityProviderLink() != null) {
 			FederatedIdentityRepresentation federatedIdentity = new FederatedIdentityRepresentation();
 			federatedIdentity.setIdentityProvider(userModel.getIdentityProviderLink());
-			federatedIdentity.setUserId(userModel.getEmail());
-			federatedIdentity.setUserName(userModel.getEmail());
+			federatedIdentity.setUserId(externalUserModel.getEmail());
+			federatedIdentity.setUserName(externalUserModel.getEmail());
 			List<FederatedIdentityRepresentation> federatedIdentities = new ArrayList<FederatedIdentityRepresentation>();
 			federatedIdentities.add(federatedIdentity);
 			userRepresentation.setFederatedIdentities(federatedIdentities);
@@ -857,24 +499,24 @@ public class ExternalUserServiceImpl {
 		}
 	}
 
-	public void updateUser(String id, UserModel userModel) {
+	public void updateUser(String id, ExternalUserModel externalUserModel) {
 
-		userModel.setId(id);
-		if(userModel.getEnable2FA()==null) {
-			userModel.setEnable2FA(false);
+		externalUserModel.setId(id);
+		if(externalUserModel.getEnable2FA()==null) {
+			externalUserModel.setEnable2FA(false);
 		}
 		UserRepresentation keycloakUserRepresentation = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().get(userModel.getId()).toRepresentation();
+				.realm(keycloakCustomConfig.getRealm()).users().get(externalUserModel.getId()).toRepresentation();
 		Date date = new Date();
 
 		if(Objects.nonNull(keycloakUserRepresentation)) {
 			UserResource userResource = keycloakBuilder.getInstance().realm(keycloakCustomConfig.getRealm()).users()
 					.get(keycloakUserRepresentation.getId());
-			if(userModel.getEnable2FA()) {
+			if(externalUserModel.getEnable2FA()) {
 				List<CredentialRepresentation> credentials = userResource.credentials();
 				credentials.forEach(credential -> {
 					if(credential.getType().equals("otp")) {
-						userModel.setEnable2FA(false);
+						externalUserModel.setEnable2FA(false);
 					}
 				});
 			}else {
@@ -888,7 +530,7 @@ public class ExternalUserServiceImpl {
 		}
 
 		UserRepresentation userRepresentation = UserModelToUserRepresentation
-				.convertUserModelToUserRepresentation(userModel, keycloakUserRepresentation, date);
+				.convertUserModelToUserRepresentation(externalUserModel, keycloakUserRepresentation, date);
 		
 		if(keycloakUserRepresentation!=null && keycloakUserRepresentation.getFederatedIdentities()!=null && !keycloakUserRepresentation.getFederatedIdentities().isEmpty()) {
 			userRepresentation.singleAttribute("isAdUser", "true");
@@ -903,7 +545,7 @@ public class ExternalUserServiceImpl {
 
 		leaveAllGroups(id);
 
-		assignUserToGroups(id, userModel.getGroupIds());
+		assignUserToGroups(id, externalUserModel.getGroupIds());
 	}
 
 	public void leaveAllGroups(String uuid) {
@@ -924,11 +566,11 @@ public class ExternalUserServiceImpl {
 		}
 	}
 
-	public UserModel getUser(String id) {
+	public ExternalUserModel getUser(String id) {
 
 		UserRepresentation userRepresentation = findById(id);
 
-		UserModel userModel = UserRepresentationToUserModel.convertUserRepresentationToUserModel(userRepresentation,
+		ExternalUserModel externalUserModel = UserRepresentationToUserModel.convertUserRepresentationToUserModel(userRepresentation,
 				getGroupsAssignedToUsers(id),dateTimeApiAuth);
 
 		if(userRepresentation!=null) {
@@ -936,16 +578,16 @@ public class ExternalUserServiceImpl {
 			List<CredentialRepresentation> credentials = userResource.credentials();
 			credentials.forEach(credential -> {
 				if(credential.getType().equals("otp")) {
-					userModel.setEnable2FA(true);
+					externalUserModel.setEnable2FA(true);
 				}
 			});
 		}
 		
 		if(userRepresentation!=null && userRepresentation.getFederatedIdentities()!=null && !userRepresentation.getFederatedIdentities().isEmpty()) {
-			userModel.setIdentityProviderLink(userRepresentation.getFederatedIdentities().get(0).getIdentityProvider());
+			externalUserModel.setIdentityProviderLink(userRepresentation.getFederatedIdentities().get(0).getIdentityProvider());
 		}
 
-		return userModel;
+		return externalUserModel;
 	}
 
 	public List<GroupRepresentation> getGroupsAssignedToUsers(String userUuid) {
@@ -1167,13 +809,13 @@ public class ExternalUserServiceImpl {
 		return new ArrayList<String>();
 	}
 
-	public boolean validate(UserModel userModel) {
+	public boolean validate(ExternalUserModel externalUserModel) {
 
-		if (StringUtils.isEmpty(userModel.getUserName()) || StringUtils.isEmpty(userModel.getDisplayName()))
+		if (StringUtils.isEmpty(externalUserModel.getUserName()) || StringUtils.isEmpty(externalUserModel.getDisplayName()))
 			return false;
-		if (userModel.getReportingManagerId() != null && !existsByUserName(userModel.getReportingManagerId()))
+		if (externalUserModel.getReportingManagerId() != null && !existsByUserName(externalUserModel.getReportingManagerId()))
 			return false;
-		if (!EmailValidator.validate(userModel.getEmail()))
+		if (!EmailValidator.validate(externalUserModel.getEmail()))
 			return false;
 		return true;
 	}
@@ -1391,29 +1033,7 @@ public class ExternalUserServiceImpl {
 		return false;
 	}
 
-	public List<UserGridModel> getUserListingCustomized(Integer pageIndex, Integer pageSize, String filter, String sort,
-			boolean isAndFilter)
-	{
-
-		List<UserRepresentation> userRepresentations = keycloakBuilder.getInstance()
-				.realm(keycloakCustomConfig.getRealm()).users().search(null, 0, Integer.MAX_VALUE);
-
-		List<UserGridModel> customizeduserGridModels = new ArrayList<>();
-
-		userRepresentations.stream().filter(getUserListFilter(filter, isAndFilter))
-				.forEach(userRepresentation -> {
-
-					UserGridModel userGridModel=new UserGridModel();
-
-					userGridModel.setId(userRepresentation.getUsername());
-					userGridModel.setUserName(userRepresentation.getUsername());
-					userGridModel.setEmail(userRepresentation.getEmail());
-					customizeduserGridModels.add(userGridModel);
-				});
-
-		return getPage(customizeduserGridModels.stream().sorted(getUserListSort(sort)).collect(Collectors.toList()),
-				pageIndex,		pageSize);
-	}
+	 
 
 	public Integer getUsersCount(String filter) {
 
