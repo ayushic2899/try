@@ -5030,15 +5030,7 @@
                         "description": "Name of the  Trail  application",
                         "type": "string"
                     },
-                    "url": {
-                        "description": "Front-end URL of the  Trail application",
-                        "type": "string"
-                    },
-                     
-                    "public_client": {
-                        "description": "A public client is accessed by web  Trail applications",
-                        "type": "boolean"
-                    },
+                    
                     
                     "clientId": {
                         "description": "User Client Id",
