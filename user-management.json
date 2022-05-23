@@ -2945,6 +2945,147 @@
                     "required": true
                 }
             ]
+        },
+         
+        "/userExternal": {
+            "summary": "APIs for Creating External User Account",
+            "description": "APIs for Creating External User Account",
+            "get": {
+                "tags": [
+                    "UserManagement"
+                ],
+                "parameters": [
+                    {
+                        "name": "pageIndex",
+                        "description": "Index of page to be fetched",
+                        "schema": {
+                            "format": "int32",
+                            "type": "integer"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "description": "Number of records to be fetched per page",
+                        "schema": {
+                            "format": "int32",
+                            "type": "integer"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "filter",
+                        "description": "filter the user listing based on user status and name.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "sort",
+                        "description": "display sorted user listing based on column name specified.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "groupName",
+                        "description": "filter the user listing based on group name specified.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "query",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExternalUserGridModel"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "list of users"
+                    }
+                },
+                "operationId": "getExternalUserListing",
+                "summary": "To get list of External users",
+                "description": "To get list of External users"
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExternalUserModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "UserManagement"
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdModel"
+                                }
+                            }
+                        },
+                        "description": "Reponse when user is created successfully"
+                    },
+                    "400": {
+                        "description": "Response when bad request"
+                    },
+                    "401": {
+                        "description": "Reponse when unauthorized to create user"
+                    },
+                    "409": {
+                        "description": "Response when there is any conflict in request and current state"
+                    }
+                },
+                "operationId": "createExternalUser",
+                "summary": "API for saving the External user",
+                "description": "API for saving the External user"
+            }
+        },
+        "/trail": {
+            "get": {
+                "tags": [
+                    "UserManagement"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrailModel"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "gets list of all Trail applications"
+                    }
+                },
+                "operationId": "getTrail",
+                "summary": "gets list of all Trail applications",
+                "description": "gets list of all Trail applications"
+            }
         }
     },
     "components": {
@@ -4603,6 +4744,305 @@
                         "format": "int64",
                         "description": "total records present in the system",
                         "type": "integer"
+                    }
+                }
+            },
+            "DemoModel": {
+                "description": "",
+                "type": "object"
+            },
+            "ExternalUserModel": {
+                "description": "User model",
+                "required": [
+                    "timeZone",
+                    "dateFormat",
+                    "timeFormat",
+                    "startOfWeek",
+                    "showTimeZone"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "UUID of the user",
+                        "type": "string"
+                    },
+                    "userName": {
+                        "description": "Username for the account",
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "User account password",
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "description": "User's display name",
+                        "type": "string"
+                    },
+                    "email": {
+                        "description": "User's email id",
+                        "type": "string"
+                    },
+                    "contactNumber": {
+                        "description": "User's contact number",
+                        "type": "string"
+                    },
+                    "contactAddress": {
+                        "description": "User's contact address",
+                        "type": "string"
+                    },
+                    "countryId": {
+                        "description": "Selected Country UUID",
+                        "type": "string"
+                    },
+                    "languageId": {
+                        "description": "Selected language UUID",
+                        "type": "string"
+                    },
+                    "notes": {
+                        "description": "Notes about the user",
+                        "type": "string"
+                    },
+                    "reportingManagerId": {
+                        "description": "Reporting manager UUID",
+                        "type": "string"
+                    },
+                    "accountExpiry": {
+                        "format": "int64",
+                        "description": "Account expiry date in millis ",
+                        "type": "integer"
+                    },
+                    "numberOfApplications": {
+                        "format": "int32",
+                        "description": "Number of Applications per user",
+                        "type": "integer"
+                    },
+                    "numberOfModules": {
+                        "format": "int32",
+                        "description": "Number of Modules per user",
+                        "type": "integer"
+                    },
+                    "groupIds": {
+                        "description": "UUIDs of the groups attached to user",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "tags": {
+                        "description": "Tags associated with the User",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "firstName": {
+                        "description": "User's first name",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "description": "User's last name",
+                        "type": "string"
+                    },
+                    "timeZone": {
+                        "description": "Timezone for date/time fields",
+                        "type": "string"
+                    },
+                    "dateFormat": {
+                        "description": "Format for date fields",
+                        "type": "string"
+                    },
+                    "timeFormat": {
+                        "description": "Format for time fields",
+                        "type": "string"
+                    },
+                    "startOfWeek": {
+                        "description": "Start day of the week",
+                        "enum": [
+                            "Sunday",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday"
+                        ],
+                        "type": "string"
+                    },
+                    "showTimeZone": {
+                        "description": "Show/Hide timezone in date/time fields",
+                        "type": "boolean"
+                    },
+                    "enable2FA": {
+                        "description": "if 2 Factor Authentication enabled",
+                        "type": "boolean"
+                    },
+                    "identityProviderLink": {
+                        "description": "Alias of the identity provider user is to be linked to",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "id": "59485130-95f1-11ea-9c17-d9e1353b02d1",
+                    "userName": "john.smith",
+                    "password": "john@123",
+                    "fullName": "John Smith",
+                    "displayName": "John S",
+                    "email": "john.smith@gmail.com",
+                    "contactNumber": "9473865391",
+                    "contactAddress": "#78, Andreas Street, New York City",
+                    "countryId": "61205fb0-95f1-11ea-9c17-d9e1353b02d1",
+                    "languageId": "6aa3ad30-95f1-11ea-9c17-d9e1353b02d1",
+                    "notes": "John Smith works as a manager",
+                    "reportingManagerId": "746b56b0-95f1-11ea-9c17-d9e1353b02d1",
+                    "accountExpiry": "1588060446625",
+                    "groupIds": [
+                        "746b56b0-95f1-11ea-9c17-d9e1353b02d1",
+                        "7ee671b0-95f1-11ea-9c17-d9e1353b02d1"
+                    ],
+                    "tags": [
+                        "admin",
+                        "user"
+                    ]
+                }
+            },
+            "ExternalUserGridModel": {
+                "description": "model to display users",
+                "required": [
+                    "id",
+                    "userName",
+                    "status",
+                    "email",
+                    "displayName"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "UUID of the user",
+                        "type": "string"
+                    },
+                    "userName": {
+                        "description": "name of the user",
+                        "type": "string"
+                    },
+                    "status": {
+                        "description": "current status of the user",
+                        "type": "string"
+                    },
+                    "email": {
+                        "description": "user email",
+                        "type": "string"
+                    },
+                    "accountExpiry": {
+                        "format": "int64",
+                        "description": "user account expiry date",
+                        "type": "integer"
+                    },
+                    "createdDate": {
+                        "format": "int64",
+                        "description": "date when user is added",
+                        "type": "integer"
+                    },
+                    "description": {
+                        "description": "description",
+                        "type": "string"
+                    },
+                    "contactNumber": {
+                        "description": "user contactNumber",
+                        "type": "string"
+                    },
+                    "country": {
+                        "description": "user country",
+                        "type": "string"
+                    },
+                    "language": {
+                        "description": "user language",
+                        "type": "string"
+                    },
+                    "contactAddress": {
+                        "description": "user contactAddress",
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "description": "user shortName",
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "description": "First Name of the User",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "description": "Last Name of the User",
+                        "type": "string"
+                    },
+                    "noOfApplications": {
+                        "format": "int32",
+                        "description": "no of applications",
+                        "type": "integer"
+                    },
+                    "noOfModules": {
+                        "format": "int32",
+                        "description": "no of modules",
+                        "type": "integer"
+                    },
+                    "group": {
+                        "description": "groups assigned to the user",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "isLdap": {
+                        "description": "",
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "id": "1c456bb0-95f1-11ea-9c17-d9e1353b02d1",
+                    "userName": "John",
+                    "status": "active",
+                    "role": "admin",
+                    "group": [
+                        "ngp_group1",
+                        "ngp_group2"
+                    ],
+                    "email": "john.keats@subex.com",
+                    "fullName": "John Keats",
+                    "accountExpiry": "2020-04-27",
+                    "createdDate": "Mikel",
+                    "shortName": "mike",
+                    "description": "admin user",
+                    "contactNumber": "987976997",
+                    "country": "US",
+                    "language": "ENG",
+                    "contactAddress": "#123,USA"
+                }
+            },
+            "TrailModel": {
+                "description": "Trail Application Model with Previliges",
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    
+                    "name": {
+                        "description": "Name of the  Trail  application",
+                        "type": "string"
+                    },
+                    "url": {
+                        "description": "Front-end URL of the  Trail application",
+                        "type": "string"
+                    },
+                     
+                    "public_client": {
+                        "description": "A public client is accessed by web  Trail applications",
+                        "type": "boolean"
+                    },
+                    
+                    "clientId": {
+                        "description": "User Client Id",
+                        "type": "string"
                     }
                 }
             }
